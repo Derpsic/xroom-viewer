@@ -88,6 +88,7 @@
   </span>
   <span id="elines" class="egroup" hidden>
   <label>tool <select id="eltool"><option value="draw" selected>draw</option><option value="edit">select / move</option><option value="erase">erase</option></select></label>
+  <label title="what new lines block when the grid is built: land walls (outline walkable areas), flyer walls, or both">kind <select id="elkind"><option value="1" selected>land</option><option value="2">flyers</option><option value="3">both</option></select></label>
   <span id="elhint"></span>
   <button id="eldel" title="delete the selected lines (Delete key)">delete line</button>
   <button class="ebuild" title="rebuild the walk grid: collision lines make the land blocks (inside closed outlines = walkable, on a line or outside = blocked); air volumes (type 14) make the flying blocks, and cells with both become 3. A room without air volumes keeps its old flying blocks.">build grid from lines</button>
@@ -102,13 +103,13 @@
   <span id="evols" class="egroup" hidden>
   <label>tool <select id="evtool"><option value="draw" selected>draw</option><option value="edit">select / move</option></select></label>
   <select id="evlist" title="all volumes"></select>
-  <label title="type 3 volumes are liquids (from the game client: VolumeManager.isSplashVolume = type 3). The message must be exactly one of the client's liquid names; each has a fixed colour in the client, so a room can't pick its own colour">make <select id="evliquid"><option value="">liquid…</option><option value="water" title="washes any colour off the player (tested)">water (washes colour off)</option><option value="mud" title="tints the player brown #5C4033 (tested)">mud (brown)</option><option value="fire" title="tints the player dark red #AA0000 (tested)">fire (red)</option><option value="acid" title="tints the player green #4DFE15 (tested)">acid (green)</option><option value="ice" title="tints the player light blue #90CCFF (tested)">ice (light blue)</option><option value="ghost" title="fades the player to see-through (tested)">ghost (see-through)</option><option value="fallleaves" title="no tint: fall-leaf particles appear under the player as they walk through it (tested)">fall leaves (leaf particles while walking)</option><option value="snow" title="no tint: snow particles appear under the player as they walk through it (seen in a party room)">snow (snow particles while walking)</option><option value="treeleaves" title="not a liquid: no splash or colour. Landing a jump inside it plays the leaf-burst effect, so it only does something in platformer adventures (tested: nothing in a walking room; game client: AvatarWorldView.jumpLand)">tree leaves (leaf burst when landing a jump)</option><option value="phntmtreeleaves" title="like tree leaves, with the phantom version of the landing effect (game client)">phantom tree leaves (landing effect)</option></select></label>
+  <label title="type 3 volumes are liquids (from the game client: VolumeManager.isSplashVolume = type 3). The message must be exactly one of the client's liquid names (case matters); each has a fixed look in the client, so a room can't pick its own colour. Tint: water, mud, fire, acid, ice, ghost. Particles: the rest (the walking particles come from the splash effect built into the client)">make <select id="evliquid"><option value="">liquid…</option><option value="water" title="washes any colour off the player (tested)">water (washes colour off)</option><option value="mud" title="tints the player brown #5C4033 (tested)">mud (brown)</option><option value="fire" title="tints the player dark red #AA0000 (tested)">fire (red)</option><option value="acid" title="tints the player green #4DFE15 (tested)">acid (green)</option><option value="ice" title="tints the player light blue #90CCFF (tested)">ice (light blue)</option><option value="ghost" title="fades the player to see-through (tested)">ghost (see-through)</option><option value="fallleaves" title="no tint: fall-leaf particles appear under the player as they walk through it (tested)">fall leaves (leaf particles while walking)</option><option value="snow" title="no tint: white snow particles around the player as they walk through it (tested)">snow (white particles)</option><option value="gold" title="no tint: the snow particles in yellow (tested)">gold (yellow particles)</option><option value="grass" title="no tint: grass bits around the player as they walk (tested)">grass (grass bits)</option><option value="hay" title="no tint: hay bits around the player as they walk (tested)">hay (hay bits)</option><option value="icing" title="no tint: the snow particles in a light brown (tested)">icing (light brown particles)</option><option value="icingpurple" title="no tint: the snow particles in purple (tested)">purple icing (purple particles)</option><option value="purple" title="no tint: the water splash effect, but purple (tested)">purple (purple water splash)</option><option value="splash" title="not a real liquid name: any name the game doesn’t know (like splash, seen in rooms) shows the plain water splash with no colour wash (game client: the splash effect starts as water and ignores unknown names)">splash (water splash, no wash)</option><option value="treeLeaves" title="capital L. No tint: leaves falling around the player as they walk (tested). Different from lowercase treeleaves below, which is a platformer landing effect">treeLeaves (falling leaves)</option><option value="treeleaves" title="not a liquid: no splash or colour. Landing a jump inside it plays the leaf-burst effect, so it only does something in platformer adventures (tested: nothing in a walking room; game client: AvatarWorldView.jumpLand)">tree leaves (leaf burst when landing a jump)</option><option value="phntmtreeleaves" title="like tree leaves, with the phantom version of the landing effect (game client)">phantom tree leaves (landing effect)</option></select></label>
   <button id="evdup" title="duplicate the selected volume">duplicate</button><button id="evdel" title="delete the selected volume (Delete key)">delete</button>
   <span id="evprops"></span><span id="evhint"></span>
   <datalist id="evtypes">
     <option value="0">door / generic</option>
     <option value="1">click: start a minigame (typeDefId = game id)</option>
-    <option value="3">liquid (message: water, mud, fire, acid, ice, ghost, fallleaves, snow) — or landing effect (treeleaves, phntmtreeleaves: leaf burst when landing a jump, no liquid)</option>
+    <option value="3">liquid (message: water, mud, fire, acid, ice, ghost, fallleaves, snow, gold, grass, hay, icing, icingpurple, purple, treeLeaves) — or landing effect (treeleaves, phntmtreeleaves: leaf burst when landing a jump, no liquid)</option>
     <option value="5">social trigger (message = animation ids, comma-separated)</option>
     <option value="6">walk-in item: holds the attachment typeDefId while inside, no pop-up, gone on leaving (tested: 4 apple, 9 s'mores, 10 candy cane)</option>
     <option value="7">click: pop-up chosen by message (museum, pet, fact, photobooth, comic…)</option>
@@ -699,7 +700,7 @@ const AMFX={
     val(root); return out.slice(0,p); },
   get(o,k){ if(!o) return undefined; if(o.t=='obj'){ const i=o.names.indexOf(k); if(i>=0) return o.sealed[i]; const d=o.dyns.find(x=>x[0]===k); return d&&d[1]; }
     if(o.t=='arr'){ const a=o.assoc.find(x=>x[0]===k); return a&&a[1]; } },
-  set(o,k,v){ if(o.t=='obj'){ const i=o.names.indexOf(k); if(i>=0){ o.sealed[i]=v; return; } const d=o.dyns.find(x=>x[0]===k); if(d) d[1]=v; else o.dyns.push([k,v]); }
+  set(o,k,v){ if(o.t=='obj'){ const i=o.names.indexOf(k); if(i>=0){ o.sealed[i]=v; return; } const d=o.dyns.find(x=>x[0]===k); if(d) d[1]=v; else { o.dyn=true; o.dyns.push([k,v]); } }
     else if(o.t=='arr'){ const a=o.assoc.find(x=>x[0]===k); if(a) a[1]=v; else o.assoc.push([k,v]); } },
   obj(pairs){ return {t:'obj',cls:'',dyn:true,names:[],sealed:[],dyns:pairs}; },
   int(v){ return {t:'num',k:4,v}; }, dbl(v){ return {t:'num',k:5,v}; },
@@ -1053,7 +1054,48 @@ addEventListener('keydown',e=>{ if(!EDIT.on||typing()) return;
   else if(e.key=='Escape'&&!$('helpbox').hidden&&!EDIT.aplace&&!EDIT.apaste&&!EDIT.schain&&!EDIT.pchain&&!EDIT.vchain&&!EDIT.chain){ helpToggle(false); e.preventDefault(); e.stopImmediatePropagation(); } },true);
 const gridObj=()=>{ const S=(room?.actors?.ActorSettings||[])[0]; return S&&S.grid&&S.grid.grid&&S.grid.width?S.grid:null; };
 const gridDims=G=>{ const w=G.width, h=G.height||Math.round(G.grid.length/w); return {w,h,cw:(G.max.x-G.min.x)/w,ch:(G.max.y-G.min.y)/h}; };
-function editReset(){ EDIT.dirty=false; EDIT.created=false; EDIT.objDirty=false; EDIT.geomDirty=false; EDIT.setDirty=false; EDIT.camdrag=null; EDIT.lineSig=room?lineSig():undefined; EDIT.vsel=null; EDIT.vchain=null; EDIT.vdrag2=null; EDIT.psel=null; EDIT.pchain=null; EDIT.pdrag=null; EDIT.ssel=null; EDIT.schain=null; EDIT.sdrag=null; EDIT.lsel=[]; EDIT.chain=null; EDIT.ebox=null; EDIT.erase=null; EDIT.vdrag=null; EDIT.undo=[]; EDIT.redo=[]; EDIT.stroke=null; EDIT.rect=null; EDIT.sel=null; EDIT.place=null; EDIT.drag=null; EDIT.asel=null; EDIT.asels=[]; EDIT.aplace=null; EDIT.apaste=null; EDIT.aband=null; EDIT.adrag=null; EDIT.ahover=null; EDIT.artDirty=false; objTag(); artTag(); editPrep(); editStatus(); objUI(); }
+// ---------- quest blocker blocks (the walk grid's dynamicVolumes) ----------
+// A quest blocker volume (type 15/16/17) only blocks in game through a matching entry in the walk grid: {name, x, y, width, height in
+// cells, type, packedBlock}. packedBlock = runs of big-endian 16-bit numbers, value in the top 2 bits (1 walkers, 2 flyers, 3 both),
+// cell count in the low 14, row by row over the rectangle. While the quest character with that name is shown the game sets those
+// cells to the value, when it's hidden it sets them to 0 (client: RoomGrid.enableVolume). Cells that are already walls are left out
+// (or hiding the character would open the wall). An entry is only rebuilt when its volumes change; untouched ones stay as they were.
+const BLOCKER_VAL={15:1,16:2,17:3};
+const volSig=v=>v.type+':'+volVerts(v).map(q=>Math.round(q.x)+','+Math.round(q.y)).join(' ');
+const blockers=()=>objArr('volume').filter(v=>v.name&&BLOCKER_VAL[+v.type]);
+// remember how the blockers looked when the room was loaded or last saved: each of the file's entries is matched to the volume
+// (same name) its cells overlap most, by that volume's signature (type + corners)
+function dynSnapshot(){ EDIT.dyn0=true; if(!room) return; const G=gridObj(); if(!G) return; const {cw,ch}=gridDims(G);
+  const vs=blockers().map(v=>{ const P=volVerts(v); return {v,sig:volSig(v),x0:Math.floor((Math.min(...P.map(q=>q.x))-G.min.x)/cw),y0:Math.floor((Math.min(...P.map(q=>q.y))-G.min.y)/ch),x1:Math.floor((Math.max(...P.map(q=>q.x))-G.min.x)/cw),y1:Math.floor((Math.max(...P.map(q=>q.y))-G.min.y)/ch)}; });
+  (G.dynamicVolumes||[]).forEach((d,i)=>{ d._o=i; delete d._gen; delete d._off; let best=null,bo=-1;
+    for(const o of vs){ if(o.v.name!==d.name) continue; const ov=Math.max(0,Math.min(o.x1,d.x+d.width-1)-Math.max(o.x0,d.x)+1)*Math.max(0,Math.min(o.y1,d.y+d.height-1)-Math.max(o.y0,d.y)+1); if(ov>bo){ bo=ov; best=o; } }
+    d._vsig=best?d.name+'|'+best.sig:null; }); }
+// the cells one volume blocks: any part of the cell inside the shape (4×4 sample points) and the cell open in the walk grid
+function dynBuild(v,val,G){ const {w,h,cw,ch}=gridDims(G), P=volVerts(v); if(P.length<3) return null;
+  const inP=(x,y)=>{ let c=false; for(let i=0,j=P.length-1;i<P.length;j=i++){ const a=P[i],b=P[j]; if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x) c=!c; } return c; };
+  let px0=1e18,py0=1e18,px1=-1e18,py1=-1e18; for(const q of P){ px0=Math.min(px0,q.x); px1=Math.max(px1,q.x); py0=Math.min(py0,q.y); py1=Math.max(py1,q.y); }
+  const ax=Math.max(0,Math.floor((px0-G.min.x)/cw)), bx=Math.min(w-1,Math.floor((px1-G.min.x)/cw)), ay=Math.max(0,Math.floor((py0-G.min.y)/ch)), by=Math.min(h-1,Math.floor((py1-G.min.y)/ch));
+  if(bx<ax||by<ay) return null; const vals=[]; let n=0;
+  for(let cy=ay;cy<=by;cy++) for(let cx=ax;cx<=bx;cx++){ let on=false; if(!(+G.grid[cy*w+cx])){ const X=G.min.x+cx*cw, Y=G.min.y+cy*ch;
+      for(let i=0;i<4&&!on;i++) for(let j=0;j<4;j++) if(inP(X+(i+.5)*cw/4,Y+(j+.5)*ch/4)){ on=true; break; } }
+    vals.push(on?val:0); if(on) n++; }
+  const runs=[]; for(let i=0;i<vals.length;){ let k=i; while(k<vals.length&&vals[k]===vals[i]&&k-i<16383) k++; runs.push((vals[i]<<14)|(k-i)); i=k; }
+  const pb=new Uint8Array(runs.length*2); runs.forEach((r,i)=>{ pb[2*i]=r>>8; pb[2*i+1]=r&255; });
+  return {name:v.name,x:ax,y:ay,width:bx-ax+1,height:by-ay+1,type:val,packedBlock:pb,_cells:n}; }
+// bring the entries in line with the volumes: a file entry stays while its volume is unchanged; volumes that are new or changed get a
+// fresh entry; file entries whose volume changed or went are switched off (kept, so undo brings them back)
+function dynSync(force){ const G=room&&gridObj(); if(!G||!EDIT.dyn0) return; const list=G.dynamicVolumes||[], gk=[G.min.x,G.min.y,G.width,G.height].join(',');
+  const cur=blockers().map(v=>({v,key:v.name+'|'+volSig(v)})), have=new Set(cur.map(c=>c.key)), out=[]; let changed=false;
+  const kept=new Set();
+  for(const d of list) if(d._o!==undefined){ const off=d._vsig!==null&&!have.has(d._vsig);          /* entries that matched no blocker volume are none of our business: always kept */ if(!!d._off!==off){ d._off=off; changed=true; } if(!off) kept.add(d._vsig); out.push(d); }
+  for(const c of cur){ if(kept.has(c.key)) continue; const tag=c.key+'#'+gk, old=list.find(d=>d._o===undefined&&d._gen===tag);
+    if(old&&!force){ out.push(old); continue; }
+    const origVal=list.find(d=>d._o!==undefined&&d.name===c.v.name)?.type, val=+c.v.type===15&&origVal?origVal:BLOCKER_VAL[+c.v.type];   // keep the file's own value for 15 (e.g. flyer blocks in flying adventures)
+    const e=dynBuild(c.v,val,G); if(e){ e._gen=tag; out.push(e); } changed=true; }
+  if(changed||out.length!==list.length||out.some((d,i)=>d!==list[i])) G.dynamicVolumes=out;
+  EDIT.dynDirty=out.some(d=>d._off||d._o===undefined); }
+function dynCells(d){ const u=d.packedBlock instanceof Uint8Array?d.packedBlock:new Uint8Array(d.packedBlock||[]), cells=[]; for(let i=0;i+1<u.length;i+=2){ const r=(u[i]<<8)|u[i+1]; for(let k=0;k<(r&16383);k++) cells.push(r>>14); } return cells; }
+function editReset(){ EDIT.dirty=false; EDIT.created=false; EDIT.objDirty=false; EDIT.geomDirty=false; EDIT.setDirty=false; EDIT.camdrag=null; EDIT.lineSig=room?lineSig():undefined; EDIT.vsel=null; EDIT.vchain=null; EDIT.vdrag2=null; EDIT.psel=null; EDIT.pchain=null; EDIT.pdrag=null; EDIT.ssel=null; EDIT.schain=null; EDIT.sdrag=null; EDIT.lsel=[]; EDIT.chain=null; EDIT.ebox=null; EDIT.erase=null; EDIT.vdrag=null; EDIT.undo=[]; EDIT.redo=[]; EDIT.stroke=null; EDIT.rect=null; EDIT.sel=null; EDIT.place=null; EDIT.drag=null; EDIT.asel=null; EDIT.asels=[]; EDIT.aplace=null; EDIT.apaste=null; EDIT.aband=null; EDIT.adrag=null; EDIT.ahover=null; EDIT.artDirty=false; objTag(); artTag(); editPrep(); dynSnapshot(); editStatus(); objUI(); }
 function editPrep(){ const G=gridObj(); EDIT.bool=false;                // work on plain numbers 0-3; remember if the file stores booleans
   if(G&&G.grid.some(v=>typeof v==='boolean')){ EDIT.bool=true; for(let i=0;i<G.grid.length;i++) G.grid[i]=G.grid[i]===true?1:G.grid[i]===false?0:+G.grid[i]||0; }
   for(const o of $('eval').options) o.disabled=EDIT.bool&&+o.value>1; if(EDIT.bool&&+$('eval').value>1) $('eval').value='1'; }
@@ -1123,16 +1165,23 @@ $('ecreate').onclick=()=>{ const S=(room?.actors?.ActorSettings||[])[0]; if(!S||
   EDIT.created=true; EDIT.dirty=true; EDIT.undo=[]; EDIT.redo=[]; editPrep();
   PROBLEMS=PROBLEMS.filter(m=>!/no walk grid/.test(m)); showProblems(); editStatus(); edRedraw(); };
 // the room as it stands, as .xroom bytes (z = compressed). Nothing in the editor changes; markSaved() does that after a save.
-async function buildRoom(){ const root=AMFX.read(RAWBUF), act=AMFX.get(root,'actors'), S=AMFX.get(act,'ActorSettings')?.dense?.[0], G=gridObj();
+async function buildRoom(){ dynSync(true); const root=AMFX.read(RAWBUF), act=AMFX.get(root,'actors'), S=AMFX.get(act,'ActorSettings')?.dense?.[0], G=gridObj();
   if(G&&S){ const cells=G.grid.map(v=>v&3), tg=AMFX.get(S,'grid');
     if(tg&&tg.t=='obj'&&AMFX.get(tg,'grid')?.t=='vec'){ const vec=AMFX.get(tg,'grid');
       vec.items=vec.k==16?cells.map(v=>({t:'lit',k:v?3:2})):cells;          // true/false grids keep their format
       if(AMFX.get(tg,'packedGrid')) AMFX.set(tg,'packedGrid',{t:'bytes',b:packGrid(cells)});
       if(EDIT.geomDirty){ AMFX.set(tg,'width',AMFX.int(G.width)); AMFX.set(tg,'height',AMFX.int(G.height));
         for(const k of ['min','max']){ const node=AMFX.get(tg,k); if(node&&node.t=='obj'){ AMFX.set(node,'x',AMFX.dbl(G[k].x)); AMFX.set(node,'y',AMFX.dbl(G[k].y)); } else AMFX.set(tg,k,AMFX.obj([['y',AMFX.dbl(G[k].y)],['x',AMFX.dbl(G[k].x)]])); }
-        const dv=AMFX.get(tg,'dynamicVolumes'); if(dv&&dv.t=='arr') (G.dynamicVolumes||[]).forEach((d,i)=>{ const n=dv.dense[i]; if(n&&n.t=='obj'){ AMFX.set(n,'x',AMFX.int(d.x)); AMFX.set(n,'y',AMFX.int(d.y)); } }); } }
+      } }
     else AMFX.set(S,'grid',AMFX.obj([['packedGrid',{t:'bytes',b:packGrid(cells)}],['r2',AMFX.int(24)],['max',AMFX.obj([['y',AMFX.dbl(G.max.y)],['x',AMFX.dbl(G.max.x)]])],
       ['width',AMFX.int(G.width)],['min',AMFX.obj([['y',AMFX.dbl(G.min.y)],['x',AMFX.dbl(G.min.x)]])],['height',AMFX.int(G.height)],['r',AMFX.int(12)],['grid',{t:'vec',k:14,fixed:1,typ:null,items:cells}]])); }
+  // quest blocker blocks: the file's own entries (moved with the grid), minus switched-off ones, plus rebuilt ones
+  const tgd=S&&AMFX.get(S,'grid');
+  if(G&&tgd&&tgd.t=='obj'&&(EDIT.geomDirty||EDIT.dynDirty)){ const dvn=AMFX.get(tgd,'dynamicVolumes'), orig=dvn&&dvn.t=='arr'?dvn.dense:[];
+    const dense=(G.dynamicVolumes||[]).filter(d=>!d._off).map(d=>{ let n=d._o!==undefined?orig[d._o]:null;
+      if(!n||n.t!=='obj') n=AMFX.obj([['y',AMFX.int(d.y)],['type',AMFX.int(d.type)],['name',d.name],['width',AMFX.int(d.width)],['packedBlock',{t:'bytes',b:d.packedBlock}],['height',AMFX.int(d.height)],['x',AMFX.int(d.x)]]);
+      else { AMFX.set(n,'x',AMFX.int(d.x)); AMFX.set(n,'y',AMFX.int(d.y)); } return n; });
+    if(dvn&&dvn.t=='arr') dvn.dense=dense; else if(dense.length) AMFX.set(tgd,'dynamicVolumes',{t:'arr',assoc:[],dense}); }
   if(EDIT.objDirty) objWrite(act);
   if(EDIT.setDirty) setWrite(root);
   const newAssets=EDIT.artDirty?artWrite(root):[];
@@ -1143,7 +1192,7 @@ async function buildRoom(){ const root=AMFX.read(RAWBUF), act=AMFX.get(root,'act
 const usedPics=()=>new Set(artArr().map(l=>String(l.assetName).toLowerCase()));
 function unusedPics(){ const u=usedPics(); return (room?.assets||[]).filter(a=>!a._new&&!u.has(String(a.name).toLowerCase())); }
 function markSaved(r){ const bytes=r.bytes; RAWBUF=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength); EDIT.dirty=false; EDIT.created=false; EDIT.objDirty=false; EDIT.geomDirty=false; EDIT.setDirty=false; EDIT.artDirty=false;
-  for(const a of r.newAssets) a._new=false; for(const a of r.dropped||[]) hide(a,'_new',true); objTag(); artTag();
+  for(const a of r.newAssets) a._new=false; for(const a of r.dropped||[]) hide(a,'_new',true); objTag(); artTag(); { const G=gridObj(); if(G&&G.dynamicVolumes) G.dynamicVolumes=G.dynamicVolumes.filter(d=>!d._off); } dynSnapshot(); EDIT.dynDirty=false;
   if(FILES[FI]){ const f=new File([r.z],FILES[FI].name); FILES[FI]=f; navUI(); } editStatus(); }
 $('esave').onclick=async()=>{ if(!room||!RAWBUF) return; const btn=$('esave'); btn.disabled=true;
   try{ const bad=(await roomCheck()).filter(i=>i.sev=='error');
@@ -1251,13 +1300,13 @@ addEventListener('resize',()=>{ if(!$('opanel').hidden||!$('otab').hidden) opPla
 function opanelUI(k){ const P=$('opanel'), T=$('otab'); let o=EDIT.sel; if(EDIT.mode==='lines'){ o=room&&EDIT.lsel.length?EDIT.lsel[0]:null; k=o?'line':null; } else if(EDIT.mode==='art'){ o=room&&EDIT.asel&&PIECE.has(EDIT.asel)?EDIT.asel:null; k=o?'art':null; } else if(EDIT.mode==='room'){ o=room?(room.actors?.ActorSettings||[])[0]||null:null; k=o?'room':null; } else if(EDIT.mode==='vol'){ o=room?EDIT.vsel:null; k=o?'volume':null; } else if(EDIT.mode==='path'){ o=room?EDIT.psel:null; k=o?'path':null; }
   const show=EDIT.on&&((EDIT.mode==='obj'&&(k==='portal'||k==='spawn'||k==='action'))||(EDIT.mode==='vol'&&k==='volume')||(EDIT.mode==='path'&&k==='path')||(EDIT.mode==='room'&&k==='room')||(EDIT.mode==='art'&&k==='art')||(EDIT.mode==='lines'&&k==='line'))&&o; if(OP.note&&OP.note.o!==o) OP.note=null;
   P.hidden=!show||OP.collapsed; T.hidden=!show||!OP.collapsed; if(!show) return; T.textContent=(k==='spawn'?'Spawn':k==='action'?'Action':k==='volume'?'Volume':k==='path'?'Path':k==='room'?'Room':k==='art'?'Piece':k==='line'?'Lines':'Portal')+' ◂'; opPlace(); if(OP.collapsed) return;
-  if(k==='volume') return opVolume(o,P);
+  if(k==='volume'){ opVolume(o,P); nameWire(); return; }
   if(k==='path') return opPath(o,P);
   if(k==='room') return opRoom(o,P);
   if(k==='art') return opArt(o,P);
   if(k==='line') return opLines(P);
   if(k==='spawn') return opSpawn(o,P);
-  if(k==='action') return opAction(o,P);
+  if(k==='action'){ opAction(o,P); nameWire(); return; }
   const kind=+o.type===1?1:0, spawns=objArr('spawn').map(s=>s.name), slides=[...new Set(artArr().filter(l=>l._slide&&l.name).map(l=>l.name))];
   const dests=[...new Set(objArr('portal').filter(q=>+q.type!==1&&q.goto).map(q=>q.goto))];
   const opt=(list,v,empty)=>(empty!==undefined?`<option value="">${opEsc(empty)}</option>`:'')+[...new Set([...(v&&!list.includes(v)?[v]:[]),...list])].map(n=>`<option value="${opEsc(n)}"${n===v?' selected':''}>${opEsc(n)}${list.includes(n)?'':' (not in this room!)'}</option>`).join('');
@@ -1374,6 +1423,25 @@ const ACT_TYPES={
   3:{t:'Poll',d:'A poll, shown to players with at least 3 log-ins.',uses:['typeDefId','params'],td:'Poll id'},
   4:{t:'Feedback orb',d:'A feedback orb.',uses:['typeDefId'],td:'Orb id'},
   1:{t:'Unused (does nothing)',d:'The game sets this type up but nothing ever reads it.',uses:[]}};
+// ---------- name check (adventures find most things by name) ----------
+// Everything in the room that shares a name. The adventure's script isn't in the room file, so a name used only once is normal and
+// isn't flagged; near-miss names aren't flagged either (in the game's own adventures they are nearly always intended: _e/_h difficulty
+// variants, phantvol…h next to phantomvol…).
+function nmAll(){ const out=[], c=q=>{ const P=q.points?volVerts(q):null; return P&&P.length?{x:P.reduce((t,p)=>t+p.x,0)/P.length,y:P.reduce((t,p)=>t+p.y,0)/P.length}:{x:+q.x||0,y:+q.y||0}; };
+  for(const v of objArr('volume')) if(v.name) out.push({o:v,name:v.name,what:`volume (type ${v.type})`,at:c(v)});
+  for(const a of objArr('action')) if(a.name) out.push({o:a,name:a.name,what:`action (${ACT_TYPES[+a.type]?.t||'type '+a.type})`,at:{x:+a.x,y:+a.y}});
+  for(const s of objArr('spawn')) if(s.name) out.push({o:s,name:s.name,what:'spawn',at:{x:+s.x,y:+s.y}});
+  for(const p of objArr('path')) if(p.name){ const q=(p.points||p.pts||[])[0]; out.push({o:p,name:p.name,what:'path',at:q?{x:+q.x,y:+q.y}:{x:0,y:0}}); }
+  for(const l of artArr()) if(l.name) out.push({o:l,name:l.name,what:'art piece',at:{x:+l.x,y:+l.y}});
+  const G=gridObj(); if(G){ const {cw,ch}=gridDims(G); for(const d of G.dynamicVolumes||[]) if(d.name&&!d._off) out.push({o:d,name:d.name,what:'walk-grid block',at:{x:G.min.x+(d.x+d.width/2)*cw,y:G.min.y+(d.y+d.height/2)*ch},nogo:false}); }
+  return out; }
+function nameRow(o,row){ const n=o.name; if(!n) return ''; const all=nmAll(), same=all.filter(e=>e.name===n&&e.o!==o);
+  const cnt={}; for(const e of same) cnt[e.what]=(cnt[e.what]||0)+1;
+  OP.nmList=same.map(e=>e.at); OP.nmI=-1;
+  const list=same.length?Object.entries(cnt).map(([k,c])=>`${c} ${c>1?k.replace(/^([^(]*?)( \(|$)/,'$1s$2'):k}`).join(', '):'';
+  return row('Same name','',`<div class="ohint" style="margin-top:4px;color:#ddd">${same.length?`Also called “${opEsc(n)}”: ${opEsc(list)} <button class="chip" id="op_nmgo">go to next</button>`:`Nothing else in this room is called “${opEsc(n)}”.`}</div>`,
+    'Adventures match volumes, quest objects, blockers and their walk-grid blocks by exact name (case too); the quest characters themselves are in the adventure’s script, not in the room, so a name used once is normal.'); }
+function nameWire(){ const b=$('op_nmgo'); if(b) b.onclick=()=>{ const L=OP.nmList||[]; if(!L.length) return; OP.nmI=(OP.nmI+1)%L.length; goTo(L[OP.nmI]); }; }
 function opAction(o,P){
   const ty=+o.type, T=ACT_TYPES[ty], bad=!T, uses=T?T.uses:[], spawns=objArr('spawn').map(s=>s.name), r=Math.round(+o.r||0), r2=Math.round(+o.r2||0);
   const td=o.typeDefId, hasTD=typeof td==='number';
@@ -1384,6 +1452,7 @@ function opAction(o,P){
   if(uses.includes('name')||!bad) body+=row(uses.includes('name')?'Quest name':'Label','name',`<input id="op_name" value="${opEsc(o.name)}">`,
     uses.includes('name')?'Must match a quest object or character in the adventure’s script, e.g. <code>key_3b</code>, <code>plant1</code>.':'Only for you: the game doesn’t use the name for this type.',
     uses.includes('name')&&!o.name?'<div class="ost err">✗ no name: nothing will appear</div>':'');
+  if(uses.includes('name')) body+=nameRow(o,row);
   if(uses.includes('typeDefId')) body+=row(T.td,'typeDefId',num('op_td',hasTD?td:''),ty===0?'The minigame’s id (the same ids the game list uses).':ty===6?'The adventure’s id.':'',
     hasTD?'':'<div class="ost warn">⚠ not set: this type does nothing without it</div>');
   if(uses.includes('spawn')) body+=row('Return spawn','spawn',`<select id="op_sp"><option value="">(none)</option>${[...new Set([...(o.spawn&&!spawns.includes(o.spawn)?[o.spawn]:[]),...spawns])].map(n=>`<option value="${opEsc(n)}"${n===o.spawn?' selected':''}>${opEsc(n)}${spawns.includes(n)?'':' (not in this room!)'}</option>`).join('')}</select>`,
@@ -1418,37 +1487,48 @@ function opAction(o,P){
 // become interactive objects; message "gem" makes them a gem pickup).
 const POPUPS=['museum','donation','jammercentral','ebook','pet','fact','factbrady','carni','photobooth','ajeventfact','diamondinfo','adventure','displayimages','petbanner','party','eggpet','comic'];
 const VOL_TYPES={
-  0:{t:'Click area',g:'click',d:'Clickable. On its own the click does nothing; art pieces with the same name react to it (hover / click animations).'},
+  0:{t:'Click area',g:'click',d:'Clickable. On its own the click does nothing; art pieces with the same name react to it (hover / click animations). Special screens read the message themselves: on the world map it is the room to go to (jamaa_township.room_main, close, home), and in adventures a volume named map holds the minimap.'},
   1:{t:'Click: start a game',g:'click',d:'Clicking starts a minigame.',td:'Game id'},
   7:{t:'Click: pop-up',g:'click',d:'Clicking opens a pop-up chosen by the message.',msg:'popup'},
-  12:{t:'Click: shop / list',g:'click',d:'Clicking opens a shop or item list (or the theatre, for the movie player).',td:'List / shop id'},
+  12:{t:'Click: shop / list',g:'click',d:'Clicking opens a shop or item list (or the theatre, for the movie player).',td:'List / shop id',msg:'text',msgHint:'Usually empty. For video lists: the video frame: bb, bb_experiments, tt, tt_autoplay, biggerframe, cami or gw, optionally followed by width, height and true/false. Seen in rooms: tt, bb, gw%false, cami, biggerframe%false%768%432, biggerframe|768|432|false (the client splits on |).'},
   13:{t:'Click: give an item',g:'click',d:'Clicking gives the player the item with its pop-up; it wears off after a while (tested).',td:'Item id',tdHint:'Tested: 4 apple, 9 s’mores, 10 candy cane.'},
   8:{t:'Click: clothes recycling',g:'click',d:'Clicking opens clothes recycling.'},
   9:{t:'Click: den item recycling',g:'click',d:'Clicking opens den item recycling.'},
-  24:{t:'Click: item event',g:'click',d:'Clicking sends an event to an item chosen by the message (advanced).',msg:'text',msgHint:'Values separated by %.'},
+  24:{t:'Click: item event',g:'click',d:'Clicking sends an event to the item (an art piece / room object) chosen by the message. If no item answers, the message can instead start a minigame (game%59) or open a shop list (list%243%false).',msg:'text',msgHint:'An item event name, or game%<game id>, or list%<list id>%true/false. Values separated by %.'},
   4:{t:'Click area (no action)',g:'click',d:'Clickable, but the click itself does nothing. Linked art can still react.'},
   10:{t:'Click area (no action)',g:'click',d:'Clickable, but the click itself does nothing. Linked art can still react.'},
   6:{t:'Walk-in: hold an item',g:'walk',d:'While inside, the player holds the item (no pop-up); it’s gone when they leave (tested).',td:'Item id',tdHint:'Tested: 4 apple, 9 s’mores, 10 candy cane.'},
-  3:{t:'Liquid / effect',g:'walk',d:'Walking in it tints the player (water washes it off, ghost makes them see-through) or, for fall leaves and snow, shows leaf or snow particles under them. Tree leaves only work in platformer adventures: a leaf burst when landing a jump.',msg:'liquid'},
-  11:{t:'Ladder',g:'walk',d:'A ladder players climb (side-scrollers). Any volume named “ladder” is a ladder too.'},
+  3:{t:'Liquid / effect',g:'walk',d:'Walking in it tints the player (water washes it off, ghost makes them see-through) or shows an effect around them as they walk: fall leaves, falling leaves (treeLeaves, capital L), snow and its recolours (gold = yellow, icing = light brown, icingpurple = purple), grass, hay, or a purple water splash (purple). All tested. Tree leaves only work in platformer adventures: a leaf burst when landing a jump.',msg:'liquid'},
+  11:{t:'Ladder / quest area',g:'walk',d:'A ladder players climb, but only in side-scroller quests (the client checks ladders only there). Any volume named “ladder” is a ladder too. Adventures also use type 11 a lot for areas their script finds by name: slides, ocean currents, goop, exits, secrets (over 1,000 in 116 adventure rooms). In the tutorial (first five minutes) walking in sends its message to the tutorial script (the bynpc… volumes, message walkhere).'},
   19:{t:'Stealth',g:'walk',d:'Hides the player while they’re inside.'},
-  5:{t:'Social trigger',g:'walk',d:'When players inside do the listed animations, the linked art pieces react.',msg:'text',msgHint:'Animation ids, separated by commas.'},
-  15:{t:'Quest blocker',g:'other',d:'Adventures: blocks its walk-grid cells while the quest character with the same name is shown.'},
-  18:{t:'Plant area (does nothing)',g:'other',d:'The game never checks this type.'},
+  5:{t:'Social trigger',g:'walk',d:'When players inside do the listed animations, the linked art pieces react.',msg:'text',msgHint:'Animation numbers, comma separated. On land: 1–5 = sitting (by direction), 6 = play, 7–11 = probably walking (by direction), 14 and 16 = probably standing still, 17 and 18 = hop, 22 = sleep, 23 = dance. In water: 33 swirl, 38 dance, 39 play, 40 pose, 41 dive. Rooms that react to anything list them all, e.g. 17,18,23,22,14,16,9,7,8,11,10.'},
+  15:{t:'Quest blocker',g:'other',d:'Adventures: blocks its walk-grid cells while the quest character with the same name is shown. The game doesn’t check the type number: the adventure switches the volume (and the matching “dynamic volume” block stored in the walk grid, the magenta dashed box in the debug overlay) on and off by name. Across 189 adventure rooms, 1,643 of 1,700 type 15 blocks stop walkers (value 1); the rest stop flyers (2) or both (3).'},
+  17:{t:'Quest blocker (land + flyers)',g:'other',d:'Like the quest blocker (15): switched on and off by name with the quest character. In the rooms seen (the factory blocks in adventure 3a) its walk-grid block stops walkers and flyers. The number itself isn’t checked by the game.'},
+  18:{t:'Plant area',g:'other',d:'The client never checks the number 18. Seen 122 times as plant_vol / plantvol in 43 adventures, so it marks where seeds can be planted; the quest finds it by name (its seed-planting check tests the volumes of its planting character).'},
+  16:{t:'Quest blocker (flyers)',g:'other',d:'Like the quest blocker (15) but its walk-grid block stops flyers: all 201 seen in adventures have block value 2. Switched on and off by name with the quest character of the same name; the number itself isn’t checked.'},
+  23:{t:'Falling phantom area',g:'other',d:'Adventures: while the quest character with the same name (quest type 26) is active, phantoms drop from the sky onto random spots inside this area, starting 750 px up, and hurt players they land on. Seen as phantomvol… in adventures 6a, 6d, 6e and 7e2, and testfallp in room_actionquest. Found by name; the number 23 itself isn’t checked. From the game client, not tested.',msg:'text',msgHint:'Settings in milliseconds: ratemin=…,ratemax=… (random wait between phantoms) and speedmin=…,speedmax=… (how long each takes to fall). Seen: ratemin=1500,ratemax=3000,speedmin=2000,speedmax=4000.'},
+  20:{t:'Quest trigger area',g:'other',d:'Adventures: the area of the quest character with the same name (characters of quest types 3, 4, 14 and 24 use it instead of a radius). For type 24 the player must also be doing one of the animations in message, e.g. sitting or dancing. The game doesn’t check the number 20 itself: it finds the volume by name. From the game client, seen in several adventures.',msg:'text',msgHint:'Animation numbers, comma separated (only for quest characters that need one). On land: 1,2,3,4,5 = sitting in any direction, 17,18 = hop, 23 = dance, 22 = sleep, 6 = play. In water: 33 swirl, 38 dance, 39 play, 40 pose, 41 dive.'},
+  21:{t:'Darkness, soft edges',g:'other',d:'Dark quest areas (torch quests): when the adventure adds a torch, the game fills this shape with darkness, fading out over a strip along each edge; the torch light shows through it. From the game client (QuestManager.createDarknessFromScene), not tested.',msg:'text',msgHint:'Two numbers “a,b”: b is how wide the fading edge is in pixels (default 20). a is read too but its use is unclear (default 1). Seen: 5,100 (adventure 7a); usually empty for the defaults.'},
+  22:{t:'Darkness, hard edges',g:'other',d:'Like soft-edged darkness (21) but the shape is filled with no fading edge. From the game client, not tested.'},
   14:{t:'Air / no-fly area',g:'other',d:'The game ignores it, but “build grid from lines” turns it into blocks for flyers (cells it covers by 30% or more), like the original editor did: rebuild the grid after drawing or moving one. Where collision lines also block land animals, the cell becomes 3.'}};
-const LIQ_LABEL={water:'water (washes colour off)',mud:'mud (brown)',fire:'fire (red)',acid:'acid (green)',ice:'ice (light blue)',ghost:'ghost (see-through)',fallleaves:'fall leaves (leaf particles while walking)',snow:'snow (snow particles while walking)',treeleaves:'tree leaves (platformers: leaf burst on landing)',phntmtreeleaves:'phantom tree leaves (platformers)'};
+const LIQ_LABEL={water:'water (washes colour off)',mud:'mud (brown)',fire:'fire (red)',acid:'acid (green)',ice:'ice (light blue)',ghost:'ghost (see-through)',fallleaves:'fall leaves (leaf particles while walking)',snow:'snow (white particles)',gold:'gold (yellow particles)',grass:'grass (grass bits)',hay:'hay (hay bits)',icing:'icing (light brown particles)',icingpurple:'purple icing (purple particles)',purple:'purple (purple water splash)',splash:'splash (water splash, no wash; any unknown name)',treeLeaves:'treeLeaves, capital L (falling leaves)',treeleaves:'tree leaves (platformers: leaf burst on landing)',phntmtreeleaves:'phantom tree leaves (platformers)'};
 function opVolume(v,P){
   const ty=+v.type, T=VOL_TYPES[ty], isClick=T?T.g==='click':false, named=v.name==='ladder'&&ty!==11, link=v.name?artArr().filter(l=>l.name===v.name).length:0;
   const row=(lab,real,inner,hint,st)=>`<div class="orow"><div class="olab">${lab}<span class="real">${real}</span></div>${inner}${hint?`<div class="ohint">${hint}</div>`:''}${st||''}</div>`;
   const groups=[['click','Click'],['walk','Walk in'],['other','Other']];
-  let typeSel=`<select id="op_vtype">${T?'':`<option selected value="${opEsc(v.type)}">type ${opEsc(v.type)}: the game ignores it</option>`}${groups.map(([g,gl])=>`<optgroup label="${gl}">${Object.entries(VOL_TYPES).filter(([n,x])=>x.g===g).map(([n,x])=>`<option value="${n}"${+n===ty?' selected':''}>${x.t} (${n})</option>`).join('')}</optgroup>`).join('')}</select>`;
-  let body=row('What it does','type',typeSel,T?T.d:'The game client has no behaviour for this number.',named?'<div class="ost ok">Named “ladder”, so it also works as a ladder.</div>':'');
-  body+=row('Name','name',`<input id="op_vname" value="${opEsc(v.name)}">`,'Art pieces with the same name are linked to this volume'+(ty===15?'; for a quest blocker it must match the quest character':'')+'.',
+  let typeSel=`<select id="op_vtype">${T?'':`<option selected value="${opEsc(v.type)}">type ${opEsc(v.type)}: no type behaviour</option>`}${groups.map(([g,gl])=>`<optgroup label="${gl}">${Object.entries(VOL_TYPES).filter(([n,x])=>x.g===g).map(([n,x])=>`<option value="${n}"${+n===ty?' selected':''}>${x.t} (${n})</option>`).join('')}</optgroup>`).join('')}</select>`;
+  let body=row('What it does','type',typeSel,T?T.d:'The game client has no behaviour for this type number. In an adventure the script can still use the volume by its name (see Name).',named?'<div class="ost ok">Named “ladder”, so it also works as a ladder.</div>':'');
+  if(BLOCKER_VAL[ty]){ dynSync(); const G=gridObj(), ds=(G?.dynamicVolumes||[]).filter(d=>!d._off&&d.name===v.name&&v.name), cells=ds.reduce((t,d)=>t+dynCells(d).filter(Boolean).length,0), val=ds[0]?.type, gen=ds.some(d=>d._o===undefined);
+    body+=row('Walk-grid block','dynamicVolumes','',G?'The cells this blocker closes while its quest character is shown (magenta in the debug overlay). Cells that are already walls are left out.':'',
+      !G?'<div class="ost err">✗ the room has no walk grid, so it can’t block anything</div>':!v.name?'<div class="ost err">✗ no name: the game can’t switch it</div>':!ds.length?'<div class="ost warn">⚠ no block: it covers no open cells</div>':
+      `<div class="ost ${gen?'warn':'ok'}">${gen?'↻ rebuilt from this volume (saved with the room)':'✓ the file’s own block'}: ${cells} cell${cells==1?'':'s'}, blocks ${['','walkers','flyers','walkers and flyers'][val]||'value '+val}</div>`); }
+  body+=row('Name','name',`<input id="op_vname" value="${opEsc(v.name)}">`,'Art pieces with the same name are linked to this volume'+(ty===15||ty===17?'; for a quest blocker it must match the quest character':'')+'. In adventures the script also finds volumes by name (characters and objects attached to a volume), whatever the type.'+(v.name==='map'?' <b>“map”</b>: special name, the adventure’s minimap (its message is a comma list the game picks from by quest difficulty).':v.name==='bouncevolume'?' <b>“bouncevolume”</b>: special name, avatars inside it bounce (not in side-scroller quests). Used in the bouncy and carnival parties and the bouncy dens.':''),
     link?`<div class="ost ok">✓ linked to ${link} art piece${link>1?'s':''} named “${opEsc(v.name)}”</div>`:'');
+  if(v.name&&!['volume','ladder'].includes(v.name)) body+=nameRow(v,row);
   if(T&&T.msg==='popup'){ const m=v.message||'', base=m.split('%')[0]; body+=row('Pop-up','message',`<select id="op_vmsg">${POPUPS.includes(base)?'':`<option selected value="${opEsc(m)}">${m?opEsc(m)+' (unknown!)':'(choose)'}</option>`}${POPUPS.map(x=>`<option value="${x}"${x===base?' selected':''}>${x}</option>`).join('')}</select>`,
       'The pop-up the game knows by this name'+(m.includes('%')?` (extra values after %: ${opEsc(m.split('%').slice(1).join('%'))})`:'')+'.', m&&!POPUPS.includes(base)?'<div class="ost err">✗ the game has no pop-up called this: clicking does nothing</div>':!m?'<div class="ost warn">⚠ no pop-up chosen</div>':''); }
   else if(T&&T.msg==='liquid'){ const m=v.message||''; body+=row('Liquid / effect','message',`<select id="op_vmsg">${LIQUIDS.includes(m)?'':`<option selected value="${opEsc(m)}">${m?opEsc(m)+' (unknown!)':'(choose)'}</option>`}${LIQUIDS.map(x=>`<option value="${x}"${x===m?' selected':''}>${LIQ_LABEL[x]||x}</option>`).join('')}</select>`,
-      'Each liquid has a fixed effect in the game client (all seven walking ones tested).', m&&!LIQUIDS.includes(m)?'<div class="ost err">✗ the game doesn’t know this liquid: it does nothing</div>':''); }
+      'Each liquid has a fixed effect in the game client (case matters). All of them tested.', m&&!LIQUIDS.includes(m)?'<div class="ost err">⚠ not a name the game knows: it shows the plain water splash with no tint (like splash)</div>':''); }
   else if(T&&T.msg==='text') body+=row(ty===5?'Animations':'Message','message',`<input id="op_vmsgt" value="${opEsc(v.message)}">`,T.msgHint||'');
   if(T&&T.td) body+=row(T.td,'typeDefId',`<input id="op_vtd" type="number" step="1" value="${typeof v.typeDefId==='number'?v.typeDefId:''}">`,T.tdHint||'',typeof v.typeDefId==='number'?'':'<div class="ost warn">⚠ not set: this type needs it</div>');
   if(isClick) body+=row('Clicking walks there','walkTo',`<label style="display:flex;gap:8px;align-items:center;margin-top:4px;font-weight:400"><input id="op_vwalk" type="checkbox" style="width:auto;margin:0"${v.walkTo?' checked':''}> also walk the player to the clicked spot</label>`,
@@ -1626,22 +1706,29 @@ function opLines(P){
     body+=row('From','x, y',`<div class="opos"><input id="op_lx" type="number" step="any" value="${r(one.x)}"><input id="op_ly" type="number" step="any" value="${r(one.y)}"></div>`,'');
     body+=row('To','x1, y1',`<div class="opos"><input id="op_lx1" type="number" step="any" value="${r(one.x1)}"><input id="op_ly1" type="number" step="any" value="${r(one.y1)}"></div>`,`${Math.round(len(one))} px long. Typing here moves only this line’s end; dragging a corner in the room moves every line that shares it.`); }
   else body+=row('Selected','',`<div class="ohint" style="margin-top:4px;color:#ddd">${S.length} lines · ${Math.round(S.reduce((t,l)=>t+len(l),0))} px in total</div>`,'Drag one of them to move them together · Delete removes them.');
+  if(S.length){ const ks=new Set(S.map(LKIND)), k=ks.size===1?[...ks][0]:0;
+    body+=row('Blocks','kind',`<select id="op_lkind">${k?'':'<option selected value="">(mixed)</option>'}${[1,2,3].map(n=>`<option value="${n}"${n===k?' selected':''}>${{1:'land animals (outline of walkable areas)',2:'flyers',3:'land animals and flyers'}[n]}</option>`).join('')}</select>`,
+      'Only the editor reads this: it decides what “build grid from lines” blocks. Land lines outline walkable areas (outside them is blocked); flyer lines block flyers on the cells they touch, and a closed loop of them blocks flyers inside it; “both” lines do both. The game ignores collision lines and only reads the grid.'); }
   body+=row('Outlines','',`<div class="ohint" style="margin-top:4px;color:#ddd">${all.length} lines in the room</div>`,'Walkable areas must be closed outlines: every line end meets another one.',
     oe.length?`<div class="ost warn">⚠ ${oe.length} open end${oe.length>1?'s':''} (orange rings): the inside/outside fill may leak <button class="chip" id="op_loe">go to next</button></div>`:'<div class="ost ok">✓ all outlines closed</div>');
-  body+=row('Walk grid','',`<div class="opre" style="margin-top:4px"><button class="chip" id="op_lbuild">build grid from lines</button></div>`,`Lines make the land blocks (inside an outline = walkable). ${air?`The room’s ${air} air volume${air>1?'s':''} make the flying blocks.`:'No air volumes: the old flying blocks are kept.'} The game only reads the finished grid.`,
+  body+=row('Walk grid','',`<div class="opre" style="margin-top:4px"><button class="chip" id="op_lbuild">build grid from lines</button></div>`,`Land lines make the land blocks (inside an outline = walkable). Flying blocks come from flyer and “both” lines${air?` and the room’s ${air} air volume${air>1?'s':''}`:''}${!air&&!all.some(l=>LKIND(l)>1)?'; this room has neither, so its old flying blocks are kept':''}. The game only reads the finished grid.`,
     !gridObj()?'<div class="ost err">✗ no walk grid yet: the room won’t load in the game until you build one</div>':stale?'<div class="ost warn">⚠ lines or air volumes changed since the grid was built: build it again before saving</div>':'<div class="ost ok">✓ the grid matches the lines</div>');
   P.innerHTML=`<div class="oph"><b>${one?'Collision line':S.length+' collision lines'}</b><button id="op_hide" title="hide the panel">hide ▸</button></div><div class="opb">${body}</div>`;
   $('op_hide').onclick=()=>{ OP.collapsed=true; try{ localStorage.setItem('xrv_opanel','1'); }catch(e){} editStatus(); };
+  if($('op_lkind')) $('op_lkind').onchange=e=>{ const k=+e.target.value; if(!k) return; objChange(()=>{ for(const l of S){ if(k===1&&l.kind===undefined) continue; l.kind=k; } }); };
   if(one) for(const [id,f] of [['op_lx','x'],['op_ly','y'],['op_lx1','x1'],['op_ly1','y1']]) $(id).onchange=e=>{ const v=parseFloat(e.target.value); if(!isFinite(v)||v===one[f]){ editStatus(); return; } objChange(()=>{ one[f]=v; }); };
   if($('op_loe')) $('op_loe').onclick=()=>{ OP.oe=((OP.oe??-1)+1)%oe.length; goTo(oe[OP.oe]); };
   $('op_lbuild').onclick=()=>{ $('estat').textContent=buildGridFromLines(); };
 }
 $('otab').onclick=()=>{ OP.collapsed=false; try{ localStorage.setItem('xrv_opanel','0'); }catch(e){} objUI(); if(['vol','path','room','art','lines'].includes(EDIT.mode)) editStatus(); };
 // ---------- collision lines ----------
+const LKIND=l=>(+l.kind===2||+l.kind===3)?+l.kind:1, LCOL={1:'#f33',2:'#39f',3:'#c4f'}, LNAME={1:'land',2:'flyers',3:'both'};
 const LTOL=0.01, samePt=(a,b)=>Math.abs(a.x-b.x)<LTOL&&Math.abs(a.y-b.y)<LTOL;
 const lineEnds=l=>[{x:l.x,y:l.y},{x:l.x1,y:l.y1}];
-function lineOpenEnds(){ const m=new Map(); for(const l of objArr('line')) for(const p of lineEnds(l)){ const k=p.x.toFixed(2)+','+p.y.toFixed(2); const e=m.get(k); if(e) e.n++; else m.set(k,{x:p.x,y:p.y,n:1}); }
-  return [...m.values()].filter(e=>e.n%2==1); }
+// open ends of the land outlines (land and "both" lines); a free-standing flyer or "both" wall is fine on its own, so ends that only
+// "both" lines share are not counted
+function lineOpenEnds(){ const m=new Map(); for(const l of objArr('line')){ const k1=LKIND(l); if(k1===2) continue; for(const p of lineEnds(l)){ const k=p.x.toFixed(2)+','+p.y.toFixed(2); const e=m.get(k); if(e){ e.n++; if(k1===1) e.land=true; } else m.set(k,{x:p.x,y:p.y,n:1,land:k1===1}); } }
+  return [...m.values()].filter(e=>e.n%2==1&&e.land); }
 function lineSnap(p){ const tol=10/SC; let best=null,bd=tol; for(const l of objArr('line')) for(const q of lineEnds(l)){ const d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){ bd=d; best=q; } }
   if(EDIT.chain&&EDIT.chain.start){ const q=EDIT.chain.start, d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){ best=q; } }
   return best?{x:best.x,y:best.y,snapped:true}:SNAP.on?snapP(p):{x:Math.round(p.x*100)/100,y:Math.round(p.y*100)/100}; }
@@ -1649,7 +1736,7 @@ const segD=(p,l)=>{ const dx=l.x1-l.x, dy=l.y1-l.y, L=dx*dx+dy*dy; let t=L?((p.x
 function lineHit(p){ let best=null,bd=7/SC; for(const l of objArr('line')){ const [d]=segD(p,l); if(d<bd){ bd=d; best=l; } } return best; }
 function vertexHit(p){ const tol=8/SC; for(const l of objArr('line')) for(const q of lineEnds(l)) if(Math.hypot(q.x-p.x,q.y-p.y)<tol) return q; return null; }
 function paintLines(g,k){ const px=n=>n/k; g.setLineDash([]);
-  const SEL=new Set(EDIT.lsel); for(const l of objArr('line')){ const sel=SEL.has(l); g.lineWidth=px(sel?4:2); g.strokeStyle=sel?'#fff':'#f33'; g.beginPath(); g.moveTo(l.x,l.y); g.lineTo(l.x1,l.y1); g.stroke(); }
+  const SEL=new Set(EDIT.lsel); for(const l of objArr('line')){ const sel=SEL.has(l); g.lineWidth=px(sel?4:2); g.strokeStyle=sel?'#fff':LCOL[LKIND(l)]; g.beginPath(); g.moveTo(l.x,l.y); g.lineTo(l.x1,l.y1); g.stroke(); }
   g.fillStyle='#fbb'; for(const l of objArr('line')) for(const q of lineEnds(l)){ g.beginPath(); g.arc(q.x,q.y,px(2.5),0,7); g.fill(); }
   g.strokeStyle='#fa0'; g.lineWidth=px(2.5); for(const e of lineOpenEnds()){ g.beginPath(); g.arc(e.x,e.y,px(7),0,7); g.stroke(); }
   if(EDIT.lhover){ g.strokeStyle='#fff'; g.lineWidth=px(2); g.beginPath(); g.arc(EDIT.lhover.x,EDIT.lhover.y,px(6),0,7); g.stroke(); }
@@ -1664,7 +1751,7 @@ $('dbg').addEventListener('pointerdown',e=>{ if(!EDIT.on||EDIT.mode!=='lines'||!
     if(!EDIT.chain){ EDIT.chain={start:{x:p.x,y:p.y},last:{x:p.x,y:p.y}}; editStatus(); edRedraw(); return; }
     const a=EDIT.chain.last; if(samePt(a,p)) return;
     const closing=samePt(p,EDIT.chain.start);
-    objChange(()=>{ objArr('line',true).push({x:a.x,y:a.y,x1:p.x,y1:p.y}); });
+    const kd=+$('elkind').value; objChange(()=>{ objArr('line',true).push(kd>1?{x:a.x,y:a.y,x1:p.x,y1:p.y,kind:kd}:{x:a.x,y:a.y,x1:p.x,y1:p.y}); });
     EDIT.chain.last={x:p.x,y:p.y}; if(closing) EDIT.chain=null; editStatus(); edRedraw(); return; }
   if($('eltool').value=='erase'){ $('dbg').setPointerCapture(e.pointerId); EDIT.erase={before:objSnap(),n:0}; lineErase(raw); return; }
   // select / move
@@ -1709,13 +1796,19 @@ function buildGridFromLines(){ const L=objArr('line'); if(L.length<3) return 'dr
   const S=room.actors.ActorSettings[0], old=gridObj(), r2=old?.r2||24, w=Math.max(1,Math.ceil((x1-x0)/r2)), h=Math.max(1,Math.ceil((y1-y0)/r2));
   if(w*h>4e6) return `the lines span ${w}×${h} cells — too big`;
   const cw=(x1-x0)/w, ch=(y1-y0)/h, cells=new Array(w*h).fill(0);
-  // land bit: outside the outlines (even-odd per row, sampled at cell centres)
-  for(let cy=0;cy<h;cy++){ const Y=y0+(cy+.5)*ch, xs=[]; for(const l of L) if((l.y>Y)!==(l.y1>Y)) xs.push(l.x+(Y-l.y)*(l.x1-l.x)/(l.y1-l.y)); xs.sort((a,b)=>a-b);
-    let k=0; for(let cx=0;cx<w;cx++){ const X=x0+(cx+.5)*cw; while(k<xs.length&&xs[k]<=X) k++; if(k%2==0) cells[cy*w+cx]=1; } }
-  // land bit: every cell a line touches
+  // land bit: outside the outlines made of land and "both" lines; flying bit: inside closed loops of flyer lines (even-odd per row, at cell centres)
+  const evenOdd=(LS,bit,outside)=>{ if(!LS.length) return; for(let cy=0;cy<h;cy++){ const Y=y0+(cy+.5)*ch, xs=[]; for(const l of LS) if((l.y>Y)!==(l.y1>Y)) xs.push(l.x+(Y-l.y)*(l.x1-l.x)/(l.y1-l.y)); xs.sort((a,b)=>a-b);
+    let k=0; for(let cx=0;cx<w;cx++){ const X=x0+(cx+.5)*cw; while(k<xs.length&&xs[k]<=X) k++; if((k%2==0)===outside) cells[cy*w+cx]|=bit; } } };
+  // lines that don't close (a single wall) would flip inside/outside for everything beside them: flyer and "both" lines only count for
+  // inside/outside when they are part of a closed loop (every end shared); on their own they just block the cells they touch
+  const closed=(LS,prunable)=>{ let set=LS.slice(); for(;;){ const m=new Map(), key=q=>q.x.toFixed(2)+','+q.y.toFixed(2);
+      for(const l of set) for(const q of lineEnds(l)) m.set(key(q),(m.get(key(q))||0)+1);
+      const keep=set.filter(l=>!prunable(l)||lineEnds(l).every(q=>m.get(key(q))%2===0)); if(keep.length===set.length) return set; set=keep; } };
+  evenOdd(closed(L.filter(l=>LKIND(l)!==2),l=>LKIND(l)===3),1,true); evenOdd(closed(L.filter(l=>LKIND(l)===2),()=>true),2,false);
+  // every cell a line touches gets that line's kind (1 land, 2 flyers, 3 both)
   const hit=(l,a,b,c,d)=>{ let t0=0,t1=1; const dx=l.x1-l.x, dy=l.y1-l.y; for(const [p,q] of [[-dx,l.x-a],[dx,c-l.x],[-dy,l.y-b],[dy,d-l.y]]){ if(p===0){ if(q<0) return false; } else { const r=q/p; if(p<0){ if(r>t1) return false; if(r>t0) t0=r; } else { if(r<t0) return false; if(r<t1) t1=r; } } } return true; };
   for(const l of L){ const ax=Math.max(0,Math.floor((Math.min(l.x,l.x1)-x0)/cw)-1), bx=Math.min(w-1,Math.floor((Math.max(l.x,l.x1)-x0)/cw)+1), ay=Math.max(0,Math.floor((Math.min(l.y,l.y1)-y0)/ch)-1), by=Math.min(h-1,Math.floor((Math.max(l.y,l.y1)-y0)/ch)+1);
-    for(let cy=ay;cy<=by;cy++) for(let cx=ax;cx<=bx;cx++){ const X=x0+cx*cw, Y=y0+cy*ch; if(hit(l,X,Y,X+cw,Y+ch)) cells[cy*w+cx]=1; } }
+    const bits=LKIND(l); for(let cy=ay;cy<=by;cy++) for(let cx=ax;cx<=bx;cx++){ const X=x0+cx*cw, Y=y0+cy*ch; if(hit(l,X,Y,X+cw,Y+ch)) cells[cy*w+cx]|=bits; } }
   // flying bit: from the air (type 14, "no-fly") volumes, the way the original editor made it: in the sample rooms nearly every
   // flyer-blocked cell lies under one, and cells under one that the lines also block are 3. A cell counts when the volume covers
   // at least 30% of it (best match with the original grids). Rooms without air volumes keep the old grid's flying blocks.
@@ -1729,7 +1822,8 @@ function buildGridFromLines(){ const L=objArr('line'); if(L.length<3) return 'dr
         if(n>=need) cells[cy*w+cx]|=2; } } }
   let dyn=old?.dynamicVolumes;
   if(old){ const od=gridDims(old);
-    if(!air.length) for(let cy=0;cy<h;cy++) for(let cx=0;cx<w;cx++){ const X=x0+(cx+.5)*cw, Y=y0+(cy+.5)*ch, ox=Math.floor((X-old.min.x)/od.cw), oy=Math.floor((Y-old.min.y)/od.ch);
+    const flyLines=L.some(l=>LKIND(l)>1);
+    if(!air.length&&!flyLines) for(let cy=0;cy<h;cy++) for(let cx=0;cx<w;cx++){ const X=x0+(cx+.5)*cw, Y=y0+(cy+.5)*ch, ox=Math.floor((X-old.min.x)/od.cw), oy=Math.floor((Y-old.min.y)/od.ch);
       if(ox>=0&&oy>=0&&ox<od.w&&oy<od.h) cells[cy*w+cx]|=old.grid[oy*od.w+ox]&2; }
     if(dyn) dyn=dyn.map(d=>({...d, x:Math.round((old.min.x+d.x*od.cw-x0)/cw), y:Math.round((old.min.y+d.y*od.ch-y0)/ch)})); }   // dynamic volumes are placed in cells: keep them on the same spot
   if(EDIT.bool) for(let i=0;i<cells.length;i++) cells[i]&=1;
@@ -1737,7 +1831,7 @@ function buildGridFromLines(){ const L=objArr('line'); if(L.length<3) return 'dr
   const before=gridClone(old); S.grid=G; const after=gridClone(G); EDIT.lineSig=lineSig();
   EDIT.undo.push({kind:'gridobj',before,after}); EDIT.redo=[]; EDIT.dirty=EDIT.geomDirty=true; if(!old) EDIT.created=true;
   PROBLEMS=PROBLEMS.filter(m=>!/no walk grid/.test(m)); showProblems(); editPrep(); editStatus(); edRedraw();
-  const oe=lineOpenEnds().length; return `built ${w}×${h} grid`+(air.length?` (flying blocks from ${air.length} air volume${air.length>1?'s':''})`:old?' (flying blocks kept)':'')+(oe?` — warning: ${oe} open line end${oe>1?'s':''}, so some outlines aren't closed and the inside/outside fill may leak`:''); }
+  const oe=lineOpenEnds().length; const nfl=L.filter(l=>LKIND(l)>1).length; return `built ${w}×${h} grid`+(air.length||nfl?` (flying blocks from ${[nfl?nfl+' flyer/both line'+(nfl>1?'s':''):'',air.length?air.length+' air volume'+(air.length>1?'s':''):''].filter(Boolean).join(' and ')})`:old?' (flying blocks kept)':'')+(oe?` — warning: ${oe} open line end${oe>1?'s':''}, so some outlines aren't closed and the inside/outside fill may leak`:''); }
 for(const b of document.querySelectorAll('.ebuild')) b.onclick=()=>{ if(!room) return; const msg=buildGridFromLines(); $('estat').textContent=msg; };
 
 // write spawns/portals into the lossless tree: originals keep their AMF object (field order, int/double), new ones copy the room's field order
@@ -1748,7 +1842,7 @@ function objWrite(act){
     const out=(view||[]).map(o=>{ const node=(o._i!==undefined&&orig[o._i]&&orig[o._i].t=='obj')?orig[o._i]:AMFX.obj(order.map(f=>[f,{t:'lit',k:0}]));
       for(const f of [...new Set([...order,...Object.keys(o)])]){ if(!(f in o)) continue; const v=o[f], cur=AMFX.get(node,f);
         if(f=='points'){ AMFX.set(node,f,writePoints(v,cur)); continue; }
-        let nv; if(typeof v=='number'){ let kk=cur&&cur.t=='num'?cur.k:(['r','r2','type','typeDefId','musicVol','denCatId','xmin','xmax','ymin','ymax'].includes(f)?4:5); if(kk==4&&!Number.isInteger(v)) kk=5; nv=(cur&&cur.t=='num'&&cur.k===kk&&cur.v===v)?cur:{t:'num',k:kk,v}; }
+        let nv; if(typeof v=='number'){ let kk=cur&&cur.t=='num'?cur.k:(['r','r2','type','typeDefId','musicVol','denCatId','xmin','xmax','ymin','ymax','kind'].includes(f)?4:5); if(kk==4&&!Number.isInteger(v)) kk=5; nv=(cur&&cur.t=='num'&&cur.k===kk&&cur.v===v)?cur:{t:'num',k:kk,v}; }
         else if(typeof v=='string') nv=v; else if(typeof v=='boolean') nv={t:'lit',k:v?3:2}; else nv=cur||{t:'lit',k:0};
         AMFX.set(node,f,nv); }
       return node; });
@@ -2135,7 +2229,7 @@ async function roomCheck(){ const out=[], A=room.actors||{}, S=(A.ActorSettings|
     if(o.fullSpawn&&!sn.includes(o.fullSpawn)) add('info',`The portal to "${o.goto}" falls back to spawn "${o.fullSpawn}" when that room is full, but this room has no such spawn.`,at); }
   const vm=v=>{ const P=volVerts(v); return P.length?mid([Math.min(...P.map(q=>q.x)),Math.min(...P.map(q=>q.y)),Math.max(...P.map(q=>q.x)),Math.max(...P.map(q=>q.y))]):null; };
   for(const v of A.ActorVolume||[]){ if(volVerts(v).length<3){ add('warn',`Volume "${v.name}" has fewer than 3 corners, so it covers no area.`,vm(v)); continue; }
-    if(v.type==3&&!LIQUIDS.includes(v.message)) add('warn',`Liquid "${v.name}" has message "${v.message}": the game only knows ${LIQUIDS.join(', ')}, so it does nothing (client). (treeleaves / phntmtreeleaves are landing effects, not liquids.)`,vm(v));
+    if(v.type==3&&!LIQUIDS.includes(v.message)) add('warn',`Liquid "${v.name}" has message "${v.message}": the game doesn’t know that name, so it just shows the plain water splash with no tint, like “splash” (client). Known: ${LIQUIDS.join(', ')}. (treeleaves / phntmtreeleaves are landing effects, not liquids.)`,vm(v));
   }
   { const t14=(A.ActorVolume||[]).filter(v=>v.type==14); if(t14.length) add('info',`${t14.length} volume${t14.length>1?'s are':' is'} type 14 (air / no-fly). The game client never uses type 14 (the game's own rooms have them, probably left by the original editor); to keep flyers out, paint "block flying" (2 or 3) on the walk grid.`,vm(t14[0])); }
   const oe=lineOpenEnds(); for(const q of oe.slice(0,30)) add('warn','Collision line end not connected: an open outline can make the walk grid leak when it is built.',{x:q.x,y:q.y});
@@ -2169,9 +2263,9 @@ $('echeck').onclick=()=>showCheck();
 // ---------- volumes ----------
 const volVerts=v=>{ const P=v.points||[]; return P.length>1&&(P[P.length-1]===P[0]||(P[P.length-1].x===P[0].x&&P[P.length-1].y===P[0].y))?P.slice(0,-1):P.slice(); };
 const volSet=(v,verts)=>{ v.points=[...verts,verts[0]]; };              // closed: the last entry is the first point again
-const LIQUIDS=['water','mud','fire','acid','ice','ghost','fallleaves','snow','treeleaves','phntmtreeleaves'];   // the last two are not liquids: landing a jump in them plays a leaf burst (AvatarWorldView.jumpLand)
+const LIQUIDS=['water','mud','fire','acid','ice','ghost','fallleaves','snow','gold','grass','hay','icing','icingpurple','purple','splash','treeLeaves','treeleaves','phntmtreeleaves'];   // the last two are not liquids: landing a jump in them plays a leaf burst (AvatarWorldView.jumpLand)
 // liquid tint colours taken from the game client (AvatarManager.processPlayerSplashColor)
-const LIQCOL={mud:'rgba(92,64,51,.5)',fire:'rgba(170,0,0,.4)',acid:'rgba(77,254,21,.32)',ice:'rgba(144,204,255,.4)',ghost:'rgba(255,255,255,.25)',fallleaves:'rgba(220,140,40,.3)',snow:'rgba(235,245,255,.35)',treeleaves:'rgba(60,170,60,.28)',phntmtreeleaves:'rgba(150,60,170,.28)',water:'rgba(40,140,255,.30)'};
+const LIQCOL={mud:'rgba(92,64,51,.5)',fire:'rgba(170,0,0,.4)',acid:'rgba(77,254,21,.32)',ice:'rgba(144,204,255,.4)',ghost:'rgba(255,255,255,.25)',fallleaves:'rgba(220,140,40,.3)',snow:'rgba(235,245,255,.35)',gold:'rgba(255,200,40,.35)',grass:'rgba(90,190,60,.3)',hay:'rgba(220,190,90,.32)',icing:'rgba(255,190,220,.35)',icingpurple:'rgba(190,120,230,.35)',purple:'rgba(150,70,200,.32)',treeLeaves:'rgba(60,170,60,.28)',treeleaves:'rgba(60,170,60,.28)',phntmtreeleaves:'rgba(150,60,170,.28)',water:'rgba(40,140,255,.30)'};
 const volCol=(t,m)=>t==3&&LIQCOL[m]?LIQCOL[m]:t==3?'rgba(255,0,255,.25)':({3:'rgba(40,140,255,.30)',12:'rgba(255,170,40,.25)',14:'rgba(150,230,255,.18)',7:'rgba(255,120,200,.25)',0:'rgba(255,255,120,.18)'}[t]||'rgba(120,160,255,.18)');
 const polyIn=(x,y,P)=>{ let c=false; for(let i=0,j=P.length-1;i<P.length;j=i++){ const a=P[i],b=P[j]; if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x) c=!c; } return c; };
 const polyArea=P=>{ let s=0; for(let i=0,j=P.length-1;i<P.length;j=i++) s+=(P[j].x+P[i].x)*(P[j].y-P[i].y); return Math.abs(s/2); };
@@ -2202,7 +2296,7 @@ function volUI(){ const list=$('evlist'); list.innerHTML=''; const add=(t,v)=>{ 
     else { inp.type=type=='num'?'number':'text'; if(f=='type') inp.setAttribute('list','evtypes'); inp.value=v[f]==null?'':String(v[f]);
       inp.onchange=()=>{ let nv=type=='num'?parseInt(inp.value,10):inp.value; if(type=='num'&&!Number.isFinite(nv)){ volUI(); return; } if(v[f]===nv) return; objChange(()=>{ v[f]=nv; }); }; }
     lab.appendChild(inp); P.appendChild(lab); };
-  field('name','text'); field('type','num','pick or type a number (list confirmed from the game client) — 3 = liquid, 11 = ladder, 12 = shop, 7 = pop-up; 14 is editor-only'); field('message','text','for liquid volumes (type 3) it must be exactly one of: water (washes colour off), mud, fire, acid, ice, ghost, fallleaves, snow — anything else does nothing'); field('walkTo','bool','only matters for volumes you click: on = the avatar walks to where you clicked as well; off = the click only opens the volume and the avatar stays put (from the game client). No effect on water.');
+  field('name','text'); field('type','num','pick or type a number (list confirmed from the game client) — 3 = liquid, 11 = ladder, 12 = shop, 7 = pop-up; 14 is editor-only'); field('message','text','for liquid volumes (type 3) it must be exactly one of: water (washes colour off), mud, fire, acid, ice, ghost (these tint the player), fallleaves, snow, gold, grass, hay, icing, icingpurple, purple, treeLeaves (particles while walking) — case matters; any other name just shows the plain water splash does nothing'); field('walkTo','bool','only matters for volumes you click: on = the avatar walks to where you clicked as well; off = the click only opens the volume and the avatar stays put (from the game client). No effect on water.');
   if('typeDefId' in v||objArr('volume').some(x=>'typeDefId' in x)) field('typeDefId','num','shop / item id used by some volume types'); }
 function volNew(verts){ const order=(()=>{ const o=objArr('volume').find(x=>x._i!==undefined); return o?Object.keys(o):OBJ.volume.order; })();
   const v={}; for(const k of order) v[k]=k=='points'?null:k=='walkTo'?false:k=='type'||k=='typeDefId'?0:''; v.name='volume'; volSet(v,verts);
@@ -2670,7 +2764,7 @@ function setWrite(root){ const act=AMFX.get(root,'actors'), S=AMFX.get(act,'Acto
 
 // ---------- live checks: recomputed after every edit ----------
 let LIVE=new Set();
-const lineSig=()=>objArr('line').map(l=>l.x+','+l.y+','+l.x1+','+l.y1).join(';')+'|'+objArr('volume').filter(v=>+v.type===14).map(v=>volVerts(v).map(q=>q.x+','+q.y).join(' ')).join(';');   // lines + air volumes: both feed the grid
+const lineSig=()=>objArr('line').map(l=>l.x+','+l.y+','+l.x1+','+l.y1+','+LKIND(l)).join(';')+'|'+objArr('volume').filter(v=>+v.type===14).map(v=>volVerts(v).map(q=>q.x+','+q.y).join(' ')).join(';');   // lines + air volumes: both feed the grid
 function liveChecks(){ const out=[]; if(!room) return out; const A=room.actors||{}, S=(A.ActorSettings||[])[0], G=S&&S.grid;
   if(S&&!(G&&G.grid&&G.grid.length)) out.push('room has no walk grid — a walkable room hangs on an endless load without one (tested). Fix: edit room → collision lines → build grid from lines. Mini-game screens don\'t need one.');
   const sp=A.ActorSpawn||[];
@@ -2684,7 +2778,7 @@ function liveChecks(){ const out=[]; if(!room) return out; const A=room.actors||
       for(const s of sp){ if(s.toSpawn) continue; const cx=Math.floor((s.x-G.min.x)/cw), cy=Math.floor((s.y-G.min.y)/ch), outside=cx<0||cy<0||cx>=w||cy>=h, v=outside?1:G.grid[cy*w+cx];
         if(v===true||(+v&1)) out.push(`spawn "${s.name}" is on a spot blocked for land animals${outside?' (outside the walk grid)':''} — land animals may get stuck there`); } } }
   for(const p of A.ActorPortal||[]) if(!p.goto) out.push('a portal has no destination ("goto" is empty)');
-  for(const v of A.ActorVolume||[]) if(v.type==3&&!LIQUIDS.includes(v.message)) out.push(`liquid volume "${v.name}" has message "${v.message}" — the game only knows ${LIQUIDS.join(', ')}, so it does nothing (from the game client)`);
+  for(const v of A.ActorVolume||[]) if(v.type==3&&!LIQUIDS.includes(v.message)) out.push(`liquid volume "${v.name}" has message "${v.message}" — the game doesn’t know that name, so it just shows the plain water splash with no tint (from the game client)`);
   const L=A.ActorCollisionPoint||[]; if(L.length){ const oe=lineOpenEnds().length; if(oe) out.push(`${oe} collision line end${oe>1?'s are':' is'} not connected (orange rings in collision lines mode) — an open outline can make the walk grid leak`);
     if(G&&EDIT.lineSig!==undefined&&lineSig()!==EDIT.lineSig) out.push('collision lines or air volumes changed since the walk grid was built — click "build grid from lines" before saving, or the game keeps the old walkable area'); }
   return out; }
@@ -2780,13 +2874,16 @@ function paintDebug(g,k,withGrid,withRest=true){
         if(on&&run<0) run=x; else if(!on&&run>=0){ g.fillRect(G.min.x+run*cw,G.min.y+y*ch,(x-run)*cw,ch); run=-1; } } } }
     line('rgba(255,255,255,.5)',1,[4,4]); g.strokeRect(G.min.x,G.min.y,G.max.x-G.min.x,G.max.y-G.min.y);
     // dynamic volumes: grid blocks the game switches on/off (x,y,width,height in cells)
-    for(const d of G.dynamicVolumes||[]){ if(!ok(d.x)) continue; line('#f0f',2,[6,4]); g.strokeRect(G.min.x+d.x*cw,G.min.y+d.y*ch,d.width*cw,d.height*ch); label(d.name,G.min.x+d.x*cw+px(3),G.min.y+d.y*ch+px(13),'#f9f'); }
+    if(EDIT.on) dynSync();
+    for(const d of G.dynamicVolumes||[]){ if(d._off||!ok(d.x)) continue; const dc=dynCells(d);
+      g.fillStyle=d._o===undefined?'rgba(255,60,255,.30)':'rgba(255,60,255,.18)'; dc.forEach((v,i)=>{ if(v) g.fillRect(G.min.x+(d.x+i%d.width)*cw,G.min.y+(d.y+Math.floor(i/d.width))*ch,cw,ch); });
+      line('#f0f',2,[6,4]); g.strokeRect(G.min.x+d.x*cw,G.min.y+d.y*ch,d.width*cw,d.height*ch); label(d.name,G.min.x+d.x*cw+px(3),G.min.y+d.y*ch+px(13),'#f9f'); }
   }
   if(!withRest) return;
   // camera bounds (skipped when left at the editor default of ±10000)
   // camera: xmin..xmax / ymin..ymax limit the view's top-left corner; the view is 900×550, so this is what the camera can show
   if(ok(S.xmin)&&ok(S.xmax)&&!(S.xmin<=-10000&&S.xmax>=10000)){ line('#fff',2,[10,6]); g.strokeRect(S.xmin,S.ymin,S.xmax-S.xmin+VIEW.w,S.ymax-S.ymin+VIEW.h); label('camera can show',S.xmin+px(4),S.ymin+px(14),'#fff'); }
-  line('#f33'); for(const c of A.ActorCollisionPoint||[]){ g.beginPath(); g.moveTo(c.x,c.y); g.lineTo(c.x1,c.y1); g.stroke(); }
+  for(const c of A.ActorCollisionPoint||[]){ line(LCOL[LKIND(c)]); g.beginPath(); g.moveTo(c.x,c.y); g.lineTo(c.x1,c.y1); g.stroke(); }
   for(const v of A.ActorVolume||[]){ const P=v.points||[]; if(!P.length) continue; line('#0af'); g.beginPath(); P.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y)); g.stroke();
     label((v.name||'')+(ok(v.type)?` [${v.type}]`:'')+(v.message?` “${v.message}”`:''),P[0].x,P[0].y,'#8df'); }
   for(const p of A.ActorPath||[]){ const P=p.points||[]; if(!P.length) continue; line('#0ff',2,[8,5]); g.beginPath(); P.forEach((q,i)=>i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y)); if(p.isClosedLoop) g.closePath(); g.stroke();
