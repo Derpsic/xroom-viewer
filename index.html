@@ -3,7 +3,7 @@
 <title>xroom viewer</title>
 <style>
   body{margin:0;background:#1e1e1e;color:#ddd;font:14px system-ui,sans-serif}
-  #bar{position:fixed;top:0;left:0;right:0;z-index:99999;background:#111;padding:8px 12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  #bar{position:fixed;top:0;left:0;right:0;z-index:100001;background:#111;padding:8px 12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
   #bar label{cursor:pointer}
   #drop{margin:60px auto;max-width:520px;padding:50px;border:2px dashed #666;border-radius:12px;text-align:center}
   body.over #drop{border-color:#6cf;background:#222}
@@ -11,6 +11,24 @@
   #room{position:absolute;left:0;top:0;overflow:hidden;transform-origin:0 0}
   #room>*,#room>div>*{position:absolute}
   #dbg{position:absolute;left:0;top:0;z-index:99998;pointer-events:none;display:none}
+  #setpanel{position:absolute;top:100%;left:0;margin-top:6px;z-index:5;background:#1d221d;border:1px solid #3a463a;border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 6px 20px rgba(0,0,0,.5);white-space:nowrap}
+  #setpanel[hidden]{display:none}
+  #setpanel .sethead{color:#8f9a8f;font-size:12px;margin:-2px 0 -4px}
+  #setbtn.on{background:#2f3a2f;color:#ddd}
+  #lpanel{position:fixed;left:12px;width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 160px);overflow:auto;z-index:100000;background:#16211af2;color:#ddd;border:1px solid #2f4430;border-radius:8px;box-shadow:0 4px 16px #0009;font-size:13px}
+  #lpanel[hidden]{display:none}
+  #lpanel .lh{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid #2f4430;position:sticky;top:0;background:#16211a}
+  #lpanel .ll{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#1c2a1f;border-top:1px solid #2f4430;cursor:pointer}
+  #lpanel .lr{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 22px}
+  #lpanel .lr span.nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  #lpanel .lr span.nm:hover{color:#fff;text-decoration:underline}
+  #lpanel .lr.off span.nm{color:#7a857a}
+  #lpanel button.chip.on{background:#5a3f1a;color:#fdb}
+  #findres{position:absolute;left:0;top:100%;margin-top:4px;z-index:2147483000;background:#1d221d;border:1px solid #3a463a;border-radius:6px;min-width:320px;max-width:520px;max-height:60vh;overflow:auto;box-shadow:0 6px 20px rgba(0,0,0,.5);font-size:13px}
+  #findres div{padding:5px 9px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ddd}
+  #findres div.on,#findres div:hover{background:#2f3a2f}
+  #findres div small{color:#8f9a8f;margin-left:6px}
+  #findres .none{color:#8f9a8f;cursor:default}
   body:not(.dbg) .swf.guide{opacity:0;pointer-events:none}   /* motion guides: only shown with the debug overlay (kept rendering so stills still capture) */
   #info,#prog,#xy,#asinfo{opacity:.7}
   #xy{font-variant-numeric:tabular-nums;position:absolute;right:12px;bottom:2px;font-size:12px;pointer-events:none}   /* out of the flow: it appears on mouse-over and must not re-wrap the toolbar (that moved the room under the cursor) */
@@ -57,9 +75,10 @@
   .swf.wait::after{content:'';position:absolute;left:0;top:0;width:8px;height:8px;background:#fa0;opacity:.8}
 </style>
 <div id="bar">
-  <input type="file" id="file" accept=".xroom,*/*" multiple> <button id="newbtn" title="start a new, empty room">new room…</button>
+  <button id="openbtn" title="open one or more .xroom files (you can also drop them on the page)" onclick="$('file').click()">open…</button><input type="file" id="file" accept=".xroom,*/*" multiple hidden> <button id="newbtn" title="start a new, empty room">new room…</button>
   <span title="Text file of game strings (lines like: 10497  PAPER). Text fields showing #ID get the matching line. Remembered in this browser."><button id="strbtn">strings…</button><input type="file" id="strfile" accept=".txt,text/plain" hidden> <span id="strinfo"></span><button id="strclear" hidden title="forget the strings file">✕</button></span>
   <span id="nav" hidden><button id="prev" title="previous room (←)">◀</button> <select id="roomsel"></select> <button id="next" title="next room (→)">▶</button> <button id="closeroom" title="close this room (asks first if it has unsaved edits)">✕</button><button id="closeall" title="close every open room">close all</button></span>
+  <span id="findwrap" style="position:relative"><input id="find" type="search" placeholder="find…" autocomplete="off" title="find volumes, actions, spawns, portals, paths and art pieces by name (volumes also by message, portals by destination, art by picture file). Enter jumps to the next match" style="width:130px"><div id="findres" hidden></div></span>
   <label>view <select id="view" title="zoom without reloading: Ctrl + mouse wheel (or pinch) over the room zooms around the pointer. Pan: drag the room (middle mouse button anywhere, or hold Space and drag while editing)"><option value="fit" selected>fit to window</option><option value="custom" hidden id="vcustom">custom</option><option value="2">200%</option><option value="1">100%</option><option value="0.5">50%</option><option value="0.25">25%</option></select></label>
   <label>images <select id="imgq"><option value="fit" selected>save memory (shrink big images)</option><option value="full">full resolution</option></select></label>
   <label title="collision lines, volumes, spawns, portals, actions, paths, dynamic volumes, camera bounds — also drawn into Export PNG"><input type="checkbox" id="dbgbox"> debug overlay</label>
@@ -67,9 +86,10 @@
   <label title="a wolf at real game size (a default wolf, captured in game) to check sizes, paths and depth: drag it around; double-click turns it around. It sorts with the walk layer like a player"><input type="checkbox" id="wolfbox"> wolf</label>
   <span title="what a player sees: a 900×550 frame you drag around the room. It stays inside the camera limits, and parallax pieces (scrollX / scrollY ≠ 1) move the way the game moves them. Export PNG exports just this frame while it is on"><label><input type="checkbox" id="gvbox"> game view</label> <button id="gvspawn" hidden title="put the camera where it is when a player arrives at a spawn (click again for the next spawn)">at spawn</button><button id="gv100" hidden title="show the room at 100% around the frame">100%</button> <span id="gvinfo"></span></span>
   <label title="walk grid: clear = walkable (0), red = blocks land animals (1), blue = blocks flying animals (2), purple = blocks both (3)"><input type="checkbox" id="gridbox"> walk grid</label>
-  <label>SWFs <select id="swfplay"><option value="anim" selected>animated</option><option value="still">still frame (much lighter)</option><option value="off">off</option></select></label>
+  <label title="animated: SWFs play. still: each SWF is shown as one picture (much lighter on big rooms). off: SWFs are not loaded">SWFs <select id="swfplay"><option value="anim" selected>animated</option><option value="still">still</option><option value="off">off</option></select></label>
   <label>still frame at <select id="stilldelay"><option value="f1">frame 1</option><option value="500">0.5s</option><option value="1000" selected>1s</option><option value="2500">2.5s</option><option value="5000">5s</option></select></label>
   <label title="Render each distinct static SWF once and reuse the picture for every copy (animated SWFs still get their own player) SWFs that randomize themselves (pets with random colours) always get one each, like in the game"><input type="checkbox" id="swfshare" checked> share identical SWFs</label>
+  <label title="let SWFs play their sounds (ambient loops, effects). Off: the players get no audio at all, which saves a lot of work in rooms with many animations. Applies to rooms opened after changing it"><input type="checkbox" id="sndbox"> SWF sounds</label>
   <label><input type="checkbox" id="swfbox"> outline SWFs</label>
   <label>SWF position <select id="swfmode"><option value="origin">origin (x,y) @ native size</option><option value="bbox">stretch into bounding box</option></select></label>
   <label>at once <select id="conc"><option>1</option><option selected>3</option><option>6</option><option>12</option></select></label>
@@ -153,6 +173,7 @@
   <select id="ea_add" title="add a piece: choose its picture, then click in the room where it should go"></select><select id="ea_swap" title="give the selected pieces a different picture: they keep their place (centred), scale, flip, layer and other settings"></select><input type="file" id="ea_file" accept=".png,.jpg,.jpeg,.gif,.swf" hidden>
   <button id="ea_copy" title="copy the selected pieces (Ctrl+C). The clipboard is kept when you open another room, and in this browser">copy</button><button id="ea_paste" title="paste (Ctrl+V), then click where it should go">paste</button><label title="when copying, also take the collision lines, volumes, spawns, portals and actions that lie inside the selected pieces' area (e.g. a pond with its outline and water). Build the walk grid again after pasting"><input type="checkbox" id="ea_cpall"> with lines, volumes, spawns &amp; paths</label><button id="ea_dup" title="duplicate the selected pieces (Ctrl+D)">duplicate</button><button id="ea_del" title="delete the selected piece (Delete key)">delete</button>
   <span id="eaprops"></span>
+  <button id="ea_layers" title="list of the art pieces by layer and picture: hide them or lock them while you edit">layers…</button>
   <button id="ea_redraw" title="redraw the whole room: grows the view if pieces were moved past its edge">redraw room</button>
   </span>
   <span title="snap: moving and drawing lands on a grid (pieces snap their left/top edge; points, spawns and outlines snap themselves). Arrow keys then move pieces one grid step"><label><input type="checkbox" id="esnap"> snap</label> <select id="esnapsz"><option>8</option><option>12</option><option selected>24</option><option>48</option><option>96</option></select></span>
@@ -178,6 +199,7 @@
 <div id="helpbox" hidden><div class="hh"><b id="helptitle"></b><button id="helpclose" title="close (Esc)">✕</button></div><div id="helpbody"></div></div>
 <div id="drop">Choose or drop an <b>.xroom</b> file</div>
 <div id="hovtip" hidden></div><div id="opanel" hidden></div><button id="otab" hidden title="show the panel">Portal ◂</button>
+<div id="lpanel" hidden></div>
 <div id="stage" hidden><div id="room"></div><canvas id="dbg"></canvas></div>
 
 <script>
@@ -912,8 +934,8 @@ async function buildPiece(l,C,z){
       // what they show at rest (e.g. the freedom venue's fireworks show stray sparks on frame 1 but nothing until the game starts them).
       // They are captured live after a little longer instead.
       const SR=C.selfRun||(C.selfRun={});
-      if(SR[a.name]===undefined){ let r=false, rnd=false; if(info?.d){ const t=new TextDecoder('latin1').decode(info.d); r=/addEventListener/.test(t)&&/ENTER_FRAME|ADDED_TO_STAGE|TimerEvent/.test(t); rnd=/\brandom\b/.test(t)&&/[Cc]olorTransform/.test(t); /* random colours (pets); random timing alone (mushrooms, fog) doesn't show in a still */ } SR[a.name]=r; (C.rnd||(C.rnd={}))[a.name]=rnd; }
-      const selfRun=SR[a.name]; if(C.rnd?.[a.name]) e._rand=true;   // randomizes itself (pets with random colours per part): every copy gets its own capture
+      if(SR[a.name]===undefined){ let r=false, rnd=false; if(info?.d){ const t=new TextDecoder('latin1').decode(info.d); r=/addEventListener/.test(t)&&/ENTER_FRAME|ADDED_TO_STAGE|TimerEvent/.test(t); rnd=/\brandom\b/.test(t)&&/[Cc]olorTransform/.test(t); /* random colours (pets); random timing alone (mushrooms, fog) doesn't show in a still */ } SR[a.name]=r; (C.rnd||(C.rnd={}))[a.name]=rnd; (C.rndAny||(C.rndAny={}))[a.name]=!!info?.d&&/\brandom\b/.test(new TextDecoder('latin1').decode(info.d)); }
+      const selfRun=SR[a.name]; if(C.rnd?.[a.name]) e._rand=true; if(C.rndAny?.[a.name]) e._rndAny=true;   // randomizes itself (pets with random colours per part): every copy gets its own capture
       // very large pieces (e.g. the touch pool's 3376×2709 animated background) are always frozen and captured as a still, also in
       // animated mode: running a canvas that size live locks up the browser
       const big=e._w*e._h>3.5e6; if(big) e._big=true;
@@ -958,6 +980,21 @@ let Q=null;
 let XQ=[];
 function stopQueue(){ if(Q){ Q.dead=true; } Q=null; for(const q of XQ) q.dead=true; XQ=[]; $('prog').textContent=''; }
 function blank(c){ const t=document.createElement('canvas'); t.width=t.height=64; const g=t.getContext('2d'); g.drawImage(c,0,0,64,64); const d=g.getImageData(0,0,64,64).data; for(let i=3;i<d.length;i+=4) if(d[i]) return false; return true; }
+// SWF sounds: Ruffle opens the browser's audio for every player and mixes its sounds every frame, a large share of the work in rooms
+// with many animations. While the setting is off, opening audio fails for it, and Ruffle then runs with no sound at all.
+{ const AC0=window.AudioContext||window.webkitAudioContext; if(AC0){ const AC=function(...a){ if(!$('sndbox')?.checked) throw new Error('SWF sounds are off'); return new AC0(...a); }; AC.prototype=AC0.prototype; window.AudioContext=AC; if(window.webkitAudioContext) window.webkitAudioContext=AC; } }
+// copies of a shared animation: draw the real player's latest frame into each copy's canvas (~30 times a second). Only copies on or
+// near the screen (half a screen around it) keep a canvas; the rest free theirs, so a big room at 100% doesn't hold hundreds of full-size
+// pictures. The real players never stop, so a copy that comes into view shows the current frame straight away (it is prepared before
+// it reaches the screen).
+const MIRROR=[]; let mirrorRaf=0, mirrorLast=0;
+const MIRVIS=new WeakSet(), mirIO=new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting) MIRVIS.add(e.target); else { MIRVIS.delete(e.target); if(e.target.width){ e.target.width=0; e.target.height=0; } } } },{rootMargin:'50%'});
+function mirrorTick(t){ mirrorRaf=requestAnimationFrame(mirrorTick); if(t-mirrorLast<30) return; mirrorLast=t;
+  for(let i=MIRROR.length-1;i>=0;i--){ const m=MIRROR[i]; if(!m.box.isConnected){ MIRROR.splice(i,1); continue; }
+    m.dst=m.dst.filter(c=>{ if(c.isConnected) return true; mirIO.unobserve(c); return false; }); if(!m.dst.length){ MIRROR.splice(i,1); continue; }
+    const src=m.box.querySelector('ruffle-player')?.shadowRoot?.querySelector('canvas'); if(!src||!src.width) continue;
+    for(const c of m.dst){ if(!MIRVIS.has(c)) continue; if(c.width!==src.width||c.height!==src.height){ c.width=src.width; c.height=src.height; } const g=c.getContext('2d'); g.clearRect(0,0,c.width,c.height); g.drawImage(src,0,0); } }
+  if(!MIRROR.length){ cancelAnimationFrame(mirrorRaf); mirrorRaf=0; } }
 async function playSwfs(swfs,extra=false){
   const mode=$('swfplay').value;
   if(!swfs.length) return;
@@ -975,12 +1012,27 @@ async function playSwfs(swfs,extra=false){
   const cropRect=b=>{ if(b._cb&&b._nw){ const x0=Math.max(0,b._cb[0]), y0=Math.max(0,b._cb[1]), x1=Math.min(b._nw,b._cb[2]), y1=Math.min(b._nh,b._cb[3]);
       if(x1>x0&&y1>y0) return {x:x0*b._sx,y:y0*b._sy,w:(x1-x0)*b._sx,h:(y1-y0)*b._sy}; } return {x:0,y:0,w:b._w,h:b._h}; };
   // identical SWFs (same file, same stage/crop) are rendered once; the other copies reuse the picture
-  const followers=new Map(); let todo;
+  const followers=new Map(), mirrors=new Map(); let todo;
   if(share){
     const groups=new Map(), rest=[];
     for(const it of swfs){ const b=it[0];
       if(stillFor(it)&&!b._rand){ const k=[it[1],b._nw,b._nh,b._noscale,b._centered,(b._cb||[]).join(',')].join('|'); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(it); } else rest.push(it); }
     todo=rest; for(const g of groups.values()){ g.sort((x,y)=>y[0]._w*y[0]._h-x[0]._w*x[0]._h); todo.push(g[0]); if(g.length>1) followers.set(g[0][0],g.slice(1)); }   // largest copy is the master (best resolution)
+    // identical animations (same file, same size and stretch): one real player, the copies show its picture, copied every frame
+    // (mirrorTick). Big adventures repeat a few dozen animations hundreds of times (water edges, currents, corn), and every Ruffle
+    // player costs time to start and to run. Left out: anything random (copies would move in step where the game's don't), self-running
+    // pieces, noScale pieces, and art linked to a volume (it reacts to the pointer on its own).
+    const vn=new Set(objArr('volume').map(v=>v.name).filter(Boolean)), lg=new Map(), keep=[];
+    for(const it of todo){ const b=it[0];
+      if(!stillFor(it)&&!b._rand&&!b._selfRun&&!b._noscale&&!(b._l?.name&&vn.has(b._l.name))){ const k=[it[1],b._nw,b._nh,b._sx,b._sy,b._centered,b._w,b._h].join('|'); if(!lg.has(k)) lg.set(k,[]); lg.get(k).push(it); } else keep.push(it); }
+    // SWFs with randomness (ocean currents, bubbles, waves, kelp start at a random point of their loop) get a few real players per design,
+    // each with its own random start, and the copies are dealt out in turn, so neighbouring tiles don't move in step. Small groups keep a player each.
+    for(const g of lg.values()){ const rnd=!!g[0][0]._rndAny;
+      if(rnd&&g.length<=3){ keep.push(...g); continue; }
+      const m=rnd?Math.min(4,Math.max(2,Math.ceil(g.length/6))):1, masters=g.slice(0,m), rest=g.slice(m);
+      for(const ms of masters){ keep.push(ms); }
+      if(rest.length){ const share=masters.map(()=>[]); rest.forEach((it,i)=>share[i%m].push(it)); masters.forEach((ms,i)=>{ if(share[i].length){ ms[0]._mirror=true; mirrors.set(ms[0],share[i]); } }); } }
+    todo=keep;
   } else todo=swfs.slice();
   todo.sort((a,b)=>vis(a)-vis(b));
   const update=()=>{ if(extra) return; $('prog').textContent=q.done<q.total?`SWF ${q.done}/${q.total} ${(still||share)?'captured':'loaded'}`:`${q.total} SWF ${(still||share)?'ready':'loaded'}`+(followers.size?` (${followers.size} shared)`:''); };
@@ -996,9 +1048,10 @@ async function playSwfs(swfs,extra=false){
       const p=R.createPlayer(); p.style.cssText='width:100%;height:100%'+(ds?';opacity:0.01':'');
       if(box._big&&!box._noscale){ const k=Math.sqrt(2.5e6/(box._w*box._h)); Object.assign(p.style,{width:k*100+'%',height:k*100+'%',transformOrigin:'0 0',transform:`scale(${1/k})`}); }
       /* huge piece: drawn at about 2.5 million pixels and scaled up (the capture reads the smaller canvas) */
+      else if(!ds&&!box._noscale){ box._live=true; p._box=box; liveSize(p); }   // animated piece: drawn at the size it is shown (see liveSize)
       box.appendChild(p);   // a player that is about to be captured stays invisible (it still draws), so pieces captured live don't visibly play first
       const cfg={autoplay:'on',unmuteOverlay:'hidden',letterbox:'off',backgroundColor:null,wmode:'transparent'};
-      if(ds) cfg.preferredRenderer='canvas';                // canvas renderer so the frame can be read back
+      if(ds||box._mirror) cfg.preferredRenderer='canvas';                // canvas renderer so the frame can be read back (captures, and animations whose copies show its picture)
       if(box._noscale) Object.assign(cfg,{scale:'noScale',forceScale:true,salign:box._centered?'':'tl',forceAlign:true});
       else Object.assign(cfg,{scale:'exactFit',forceScale:true});   // the box is the stage × (scaleX, scaleY): stretch to it like the game does (showAll would keep the stage's proportions and shift the art when scaleX ≠ scaleY)   // artwork bigger than the stage: show it all, 1:1, from the top-left
       const grab=(tries=0)=>{
@@ -1037,6 +1090,8 @@ async function playSwfs(swfs,extra=false){
   // appears first and the browser never runs several of them at once
   const heavy=it=>!!it[0]._selfRun&&stillFor(it), later=todo.filter(heavy); todo=todo.filter(it=>!heavy(it));
   const run=async it=>{ await start(it);
+    const mc=mirrors.get(it[0]); if(mc&&!q.dead){ const dst=[]; for(const [b] of mc){ b.innerHTML=''; b.classList.remove('wait'); const c=document.createElement('canvas'); c.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none'; b.appendChild(c); b._mirrorOf=it[0]; dst.push(c); mirIO.observe(c); liveIO.observe(c); }
+      MIRROR.push({box:it[0],dst}); if(!mirrorRaf) mirrorRaf=requestAnimationFrame(mirrorTick); q.done+=mc.length; update(); }
     const f=followers.get(it[0]); if(f&&!q.dead){ if(!(await shareOut(it[0],f))) for(const m of f) todo.push(m); }   // capture failed: give the copies their own players
     await new Promise(r=>setTimeout(r,30)); };
   const n=+$('conc').value; const workers=Array.from({length:n},async()=>{ while(todo.length && !q.dead) await run(todo.shift()); });
@@ -1095,11 +1150,11 @@ function dynSync(force){ const G=room&&gridObj(); if(!G||!EDIT.dyn0) return; con
   if(changed||out.length!==list.length||out.some((d,i)=>d!==list[i])) G.dynamicVolumes=out;
   EDIT.dynDirty=out.some(d=>d._off||d._o===undefined); }
 function dynCells(d){ const u=d.packedBlock instanceof Uint8Array?d.packedBlock:new Uint8Array(d.packedBlock||[]), cells=[]; for(let i=0;i+1<u.length;i+=2){ const r=(u[i]<<8)|u[i+1]; for(let k=0;k<(r&16383);k++) cells.push(r>>14); } return cells; }
-function editReset(){ EDIT.dirty=false; EDIT.created=false; EDIT.objDirty=false; EDIT.geomDirty=false; EDIT.setDirty=false; EDIT.camdrag=null; EDIT.lineSig=room?lineSig():undefined; EDIT.vsel=null; EDIT.vchain=null; EDIT.vdrag2=null; EDIT.psel=null; EDIT.pchain=null; EDIT.pdrag=null; EDIT.ssel=null; EDIT.schain=null; EDIT.sdrag=null; EDIT.lsel=[]; EDIT.chain=null; EDIT.ebox=null; EDIT.erase=null; EDIT.vdrag=null; EDIT.undo=[]; EDIT.redo=[]; EDIT.stroke=null; EDIT.rect=null; EDIT.sel=null; EDIT.place=null; EDIT.drag=null; EDIT.asel=null; EDIT.asels=[]; EDIT.aplace=null; EDIT.apaste=null; EDIT.aband=null; EDIT.adrag=null; EDIT.ahover=null; EDIT.artDirty=false; objTag(); artTag(); editPrep(); dynSnapshot(); editStatus(); objUI(); }
+function editReset(){ ART_HID.clear(); ART_LOCK.clear(); EDIT.msel=[]; MS.box=null; MS.drag=null; EDIT.dirty=false; EDIT.created=false; EDIT.objDirty=false; EDIT.geomDirty=false; EDIT.setDirty=false; EDIT.camdrag=null; EDIT.lineSig=room?lineSig():undefined; EDIT.vsel=null; EDIT.vchain=null; EDIT.vdrag2=null; EDIT.psel=null; EDIT.pchain=null; EDIT.pdrag=null; EDIT.ssel=null; EDIT.schain=null; EDIT.sdrag=null; EDIT.lsel=[]; EDIT.chain=null; EDIT.ebox=null; EDIT.erase=null; EDIT.vdrag=null; EDIT.undo=[]; EDIT.redo=[]; EDIT.stroke=null; EDIT.rect=null; EDIT.sel=null; EDIT.place=null; EDIT.drag=null; EDIT.asel=null; EDIT.asels=[]; EDIT.aplace=null; EDIT.apaste=null; EDIT.aband=null; EDIT.adrag=null; EDIT.ahover=null; EDIT.artDirty=false; objTag(); artTag(); editPrep(); dynSnapshot(); editStatus(); objUI(); }
 function editPrep(){ const G=gridObj(); EDIT.bool=false;                // work on plain numbers 0-3; remember if the file stores booleans
   if(G&&G.grid.some(v=>typeof v==='boolean')){ EDIT.bool=true; for(let i=0;i<G.grid.length;i++) G.grid[i]=G.grid[i]===true?1:G.grid[i]===false?0:+G.grid[i]||0; }
   for(const o of $('eval').options) o.disabled=EDIT.bool&&+o.value>1; if(EDIT.bool&&+$('eval').value>1) $('eval').value='1'; }
-function editStatus(){ refreshLive(); unusedUI(); helpUI(); opanelUI(room&&EDIT.sel?objKind(EDIT.sel):null); const G=gridObj();
+function editStatus(){ refreshLive(); unusedUI(); helpUI(); layersUI(); opanelUI(room&&EDIT.sel?objKind(EDIT.sel):null); const G=gridObj();
   $('ecreate').hidden=!!G||!room; for(const id of ['etool','eval','esize','efill']) $(id).disabled=!G; $('eundo').disabled=!EDIT.undo.length; $('eredo').disabled=!EDIT.redo.length;
   $('esave').disabled=!room;
   $('egrid').hidden=EDIT.mode!=='grid'; $('eobj').hidden=EDIT.mode!=='obj'; $('elines').hidden=EDIT.mode!=='lines'; $('evols').hidden=EDIT.mode!=='vol'; $('eroom').hidden=EDIT.mode!=='room'; $('eart').hidden=EDIT.mode!=='art'; $('epaths').hidden=EDIT.mode!=='path'; $('eslides').hidden=EDIT.mode!=='slide';
@@ -1132,7 +1187,7 @@ function edUndo(redo){ const from=redo?EDIT.redo:EDIT.undo, to=redo?EDIT.undo:ED
   if(a.kind=='gridobj'){ const S=room.actors.ActorSettings[0]; S.grid=gridClone(redo?a.after:a.before); to.push(a); EDIT.dirty=EDIT.geomDirty=true; editPrep(); editStatus(); edRedraw(); return; }
   if(!G){ from.push(a); return; }
   const back={idx:a.idx,old:a.idx.map(i=>G.grid[i]),v:null}; a.idx.forEach((i,k)=>G.grid[i]=a.old[k]); to.push(back); EDIT.dirty=true; editStatus(); edRedraw(); }
-function paintEditPreview(g,k){ if(EDIT.mode=='slide'){ paintSlides(g,k,true); return; } if(EDIT.mode=='path'){ paintPaths(g,k); return; } if(EDIT.mode=='art'){ paintArt(g,k); return; } if(EDIT.mode=='room'){ paintCamera(g,k); return; } if(EDIT.mode=='vol'){ paintVolumes(g,k); return; } if(EDIT.mode=='obj'){ paintObjects(g,k); return; } if(EDIT.mode=='lines'){ paintLines(g,k); return; } const G=gridObj(); if(!G) return; const {cw,ch}=gridDims(G), n=+$('esize').value, r0=Math.floor((n-1)/2);
+function paintEditPreview(g,k){ paintPastePreview(g,k); msPaint(g,k); if(EDIT.mode=='slide'){ paintSlides(g,k,true); return; } if(EDIT.mode=='path'){ paintPaths(g,k); return; } if(EDIT.mode=='art'){ paintArt(g,k); return; } if(EDIT.mode=='room'){ paintCamera(g,k); return; } if(EDIT.mode=='vol'){ paintVolumes(g,k); return; } if(EDIT.mode=='obj'){ paintObjects(g,k); return; } if(EDIT.mode=='lines'){ paintLines(g,k); return; } const G=gridObj(); if(!G) return; const {cw,ch}=gridDims(G), n=+$('esize').value, r0=Math.floor((n-1)/2);
   g.setLineDash([]); g.lineWidth=2/k; g.strokeStyle='#fff';
   if(EDIT.rect){ const a=EDIT.rect.a,b=EDIT.rect.b, x0=Math.min(a.cx,b.cx),y0=Math.min(a.cy,b.cy),x1=Math.max(a.cx,b.cx)+1,y1=Math.max(a.cy,b.cy)+1; g.strokeRect(G.min.x+x0*cw,G.min.y+y0*ch,(x1-x0)*cw,(y1-y0)*ch); }
   else if(EDIT.hover){ const c=EDIT.hover, s=$('etool').value=='brush'?n:1, o=$('etool').value=='brush'?r0:0; g.strokeRect(G.min.x+(c.cx-o)*cw,G.min.y+(c.cy-o)*ch,s*cw,s*ch); } }
@@ -1280,7 +1335,7 @@ $('dbg').addEventListener('pointermove',e=>{ if(!EDIT.on||EDIT.mode!=='obj') ret
   if(!d) return; const p=roomXY(e); d.o.x=snapV(Math.round(p.x+d.dx)); d.o.y=snapV(Math.round(p.y+d.dy)); d.moved=true; edRedraw(); });
 $('dbg').addEventListener('pointerup',()=>{ const d=EDIT.drag; if(!d) return; EDIT.drag=null;
   if(d.moved){ EDIT.undo.push({kind:'obj',before:d.before,after:objSnap()}); EDIT.redo=[]; EDIT.dirty=EDIT.objDirty=true; editStatus(); } objUI(); });
-addEventListener('keydown',e=>{ if(!EDIT.on||EDIT.mode!=='obj'||!EDIT.sel||/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName)) return;
+addEventListener('keydown',e=>{ if(!EDIT.on||EDIT.mode!=='obj'||!EDIT.sel||/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName)) return; if(msGroup().length>1) return;
   const o=EDIT.sel, st=e.shiftKey?10:1, mv={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
   if(e.key=='Delete'||e.key=='Backspace'){ $('edel').click(); e.preventDefault(); e.stopImmediatePropagation(); }
   else if(mv){ objChange(()=>{ o.x+=mv[0]; o.y+=mv[1]; }); e.preventDefault(); e.stopImmediatePropagation(); } },true);
@@ -1300,6 +1355,7 @@ addEventListener('resize',()=>{ if(!$('opanel').hidden||!$('otab').hidden) opPla
 function opanelUI(k){ const P=$('opanel'), T=$('otab'); let o=EDIT.sel; if(EDIT.mode==='lines'){ o=room&&EDIT.lsel.length?EDIT.lsel[0]:null; k=o?'line':null; } else if(EDIT.mode==='art'){ o=room&&EDIT.asel&&PIECE.has(EDIT.asel)?EDIT.asel:null; k=o?'art':null; } else if(EDIT.mode==='room'){ o=room?(room.actors?.ActorSettings||[])[0]||null:null; k=o?'room':null; } else if(EDIT.mode==='vol'){ o=room?EDIT.vsel:null; k=o?'volume':null; } else if(EDIT.mode==='path'){ o=room?EDIT.psel:null; k=o?'path':null; }
   const show=EDIT.on&&((EDIT.mode==='obj'&&(k==='portal'||k==='spawn'||k==='action'))||(EDIT.mode==='vol'&&k==='volume')||(EDIT.mode==='path'&&k==='path')||(EDIT.mode==='room'&&k==='room')||(EDIT.mode==='art'&&k==='art')||(EDIT.mode==='lines'&&k==='line'))&&o; if(OP.note&&OP.note.o!==o) OP.note=null;
   P.hidden=!show||OP.collapsed; T.hidden=!show||!OP.collapsed; if(!show) return; T.textContent=(k==='spawn'?'Spawn':k==='action'?'Action':k==='volume'?'Volume':k==='path'?'Path':k==='room'?'Room':k==='art'?'Piece':k==='line'?'Lines':'Portal')+' ◂'; opPlace(); if(OP.collapsed) return;
+  { const g=msGroup(); if(g.length>1&&['volume','path','spawn','portal','action'].includes(k)) return msPanel(P,g); }
   if(k==='volume'){ opVolume(o,P); nameWire(); return; }
   if(k==='path') return opPath(o,P);
   if(k==='room') return opRoom(o,P);
@@ -1682,8 +1738,10 @@ function opArt(l,P){
     if(numv(l.rot)) body+=`<div class="ost warn" style="margin-top:6px">⚠ rot = ${opEsc(l.rot)}: the game ignores rotation</div>`;
     what=`${shown?LAYER_HINT[lay]:'Never shown in the game.'}${(numv(l.scrollX??1)!==1||numv(l.scrollY??1)!==1)&&lay!==1?' Scrolls at a different speed (parallax).':''}${vols.length?` Interactive through the volume “${opEsc(l.name)}”.`:''}${slides.length?' Used as a slide.':''}`;
   }
+  body+=row('While editing','',`<div class="opre" style="margin-top:4px"><button class="chip" id="op_ahid">hide</button> <button class="chip" id="op_alck">lock</button> <button class="chip" id="op_alyr">layers list</button></div>`,'Hide: not drawn while you edit (Export PNG leaves it out too). Lock: can’t be clicked or box-selected. Neither is saved; leaving the editor shows everything again.');
   P.innerHTML=`<div class="oph"><b>${multi?L.length+' pieces':opEsc(assetBase(l.assetName))} <span style="font-weight:400;color:#8f9a8f;font-size:12px">${multi?'art pieces':'art piece · layer '+opEsc(l.layer)}</span></b><button id="op_hide" title="hide the panel (the classic fields come back in the bar)">hide ▸</button></div><div class="opb">${body}<div class="owhat">${what}</div></div>`;
   $('op_hide').onclick=()=>{ OP.collapsed=true; try{ localStorage.setItem('xrv_opanel','1'); }catch(e){} editStatus(); };
+  $('op_ahid').onclick=()=>artHideSet(L,true); $('op_alck').onclick=()=>artLockSet(L,true); $('op_alyr').onclick=()=>{ LP.open=true; LP.exp.add(numv(l.layer)); layersUI(); };
   $('op_alay').onchange=e=>{ if(e.target.value==='') return; const v=+e.target.value; artChange(()=>L.forEach(o=>{ o.layer=v; })); };
   for(const b of P.querySelectorAll('[data-al]')) b.onclick=()=>artAlign(b.dataset.al);
   for(const b of P.querySelectorAll('[data-ord]')) b.onclick=()=>artOrder(b.dataset.ord);
@@ -1895,7 +1953,31 @@ function artGeom(l){ const art=l._art; if(!art) return; const sx=numv(l.scaleX)|
 // after a flip or scale, move the origin so the artwork stays centred where it was (the game's own rule would make it jump by its width)
 function artGeomKeep(l){ const o=pieceBox(l), n=artGeom(l); if(!n) return; const dx=Math.round(((o[0]+o[2])-(n[0]+n[2]))/2*100)/100, dy=Math.round(((o[1]+o[3])-(n[1]+n[3]))/2*100)/100;
   l.x+=dx; l.y+=dy; l.left=Math.round((l.left+dx)*100)/100; l.top=Math.round((l.top+dy)*100)/100; }
-const artPickable=l=>{ const L=numv(l.layer); return L==0?$('ea_l0').checked:L==1?$('ea_l1').checked:$('ea_l2').checked; };
+// hide / lock while editing (not saved): hidden pieces aren't drawn while the editor is on, locked ones can't be clicked or box-selected
+const ART_HID=new Set(), ART_LOCK=new Set();
+const artPickable=l=>{ if(ART_HID.has(l)||ART_LOCK.has(l)) return false; const L=numv(l.layer); return L==0?$('ea_l0').checked:L==1?$('ea_l1').checked:$('ea_l2').checked; };
+function artVisApply(){ for(const [l,e] of PIECE){ const h=EDIT.on&&ART_HID.has(l); if(h!==!!e._hid){ e._hid=h; if(h){ e._op0=e.style.opacity; e.style.visibility='hidden'; e.style.opacity='0'; } else { e.style.visibility=''; e.style.opacity=e._op0||''; } } } }   // opacity too: a running Ruffle player keeps itself visible inside a hidden box
+function artHideSet(list,on){ for(const l of list){ if(on) ART_HID.add(l); else ART_HID.delete(l); } if(on) selSet(EDIT.asels.filter(l=>!ART_HID.has(l))); artVisApply(); editStatus(); edRedraw(); }
+function artLockSet(list,on){ for(const l of list){ if(on) ART_LOCK.add(l); else ART_LOCK.delete(l); } if(on) selSet(EDIT.asels.filter(l=>!ART_LOCK.has(l))); editStatus(); edRedraw(); }
+const LP={open:false,exp:new Set()};
+function layersUI(){ const P=$('lpanel'); const show=LP.open&&EDIT.on&&EDIT.mode==='art'&&!!room; P.hidden=!show; if(!show) return;
+  P.style.top=($('bar').getBoundingClientRect().bottom+8)+'px';
+  const groups=new Map(); for(const l of artArr()){ const L=numv(l.layer); if(!SHOWN.includes(L)) continue; if(!groups.has(L)) groups.set(L,new Map()); const f=(l.assetName||'').split('\\').pop()||'(no picture)', g=groups.get(L); if(!g.has(f)) g.set(f,[]); g.get(f).push(l); }
+  const nm=Object.fromEntries(LAYERNAMES), all=(list,set)=>list.length&&list.every(l=>set.has(l)), chips=(key,list)=>`<button class="chip${all(list,ART_HID)?' on':''}" data-h="${key}">${all(list,ART_HID)?'show':'hide'}</button><button class="chip${all(list,ART_LOCK)?' on':''}" data-k="${key}">${all(list,ART_LOCK)?'unlock':'lock'}</button>`;
+  LP.keys=new Map(); let h=`<div class="lh"><b style="flex:1">Layers</b><button class="chip" id="lp_showall">show all</button><button class="chip" id="lp_unlockall">unlock all</button><button id="lp_close" title="close">✕</button></div>`;
+  for(const L of [...groups.keys()].sort((a,b)=>a-b)){ const g=groups.get(L), list=[...g.values()].flat(), key='L'+L; LP.keys.set(key,list); const ex=LP.exp.has(L);
+    h+=`<div class="ll" data-x="${L}"><span style="flex:1">${ex?'▾':'▸'} ${opEsc(nm[L]||'layer '+L)} <small style="color:#8f9a8f">${list.length}</small></span>${chips(key,list)}</div>`;
+    if(ex) [...g.entries()].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0])).forEach(([f,ls],i)=>{ const k=key+'_'+i; LP.keys.set(k,ls); const off=all(ls,ART_HID)||all(ls,ART_LOCK);
+      h+=`<div class="lr${off?' off':''}"><span class="nm" data-s="${k}" title="${opEsc(f)}: select ${ls.length>1?'them':'it'} and jump there">${opEsc(f)}${ls.length>1?` <small style="color:#8f9a8f">×${ls.length}</small>`:''}</span>${chips(k,ls)}</div>`; }); }
+  if(!groups.size) h+='<div style="padding:10px;color:#8f9a8f">no art pieces in this room</div>';
+  P.innerHTML=h;
+  $('lp_close').onclick=()=>{ LP.open=false; layersUI(); };
+  $('lp_showall').onclick=()=>{ ART_HID.clear(); artVisApply(); editStatus(); edRedraw(); };
+  $('lp_unlockall').onclick=()=>{ ART_LOCK.clear(); editStatus(); edRedraw(); };
+  for(const d of P.querySelectorAll('.ll')) d.onclick=e=>{ if(e.target.closest('button')) return; const L=+d.dataset.x; if(LP.exp.has(L)) LP.exp.delete(L); else LP.exp.add(L); layersUI(); };
+  for(const b of P.querySelectorAll('[data-h]')) b.onclick=()=>{ const ls=LP.keys.get(b.dataset.h); artHideSet(ls,!all(ls,ART_HID)); };
+  for(const b of P.querySelectorAll('[data-k]')) b.onclick=()=>{ const ls=LP.keys.get(b.dataset.k); artLockSet(ls,!all(ls,ART_LOCK)); };
+  for(const sp of P.querySelectorAll('[data-s]')) sp.onclick=()=>{ const ls=LP.keys.get(sp.dataset.s), ok=ls.filter(artPickable); const b=pieceBox(ls[0]); goTo({x:(b[0]+b[2])/2,y:(b[1]+b[3])/2}); if(ok.length){ selSet(ok,ok[0]); editStatus(); edRedraw(); } else $('estat').textContent='those pieces are hidden, locked or on a layer “pick” leaves out, so they were only shown, not selected'; }; }
 function artHits(p){ const out=[]; for(const [l,e] of PIECE){ if(!artPickable(l)||(e.classList.contains('guide')&&!$('dbgbox').checked)) continue;
     const b=pieceBox(l); if(p.x>=b[0]&&p.x<=b[2]&&p.y>=b[1]&&p.y<=b[3]) out.push([l,+e.style.zIndex||0]); }
   return out.sort((a,b)=>b[1]-a[1]).map(x=>x[0]); }
@@ -2017,8 +2099,8 @@ function artCopy(cut){ const L=EDIT.asels; if(!L.length) return; const boxes=L.m
   CLIP=clip; clipSave(clip); if(cut) artDel();
   const ex=clip.extra?Object.entries(clip.extra).filter(([,v])=>v.length).map(([k,v])=>v.length+' '+k).join(', '):'';
   editStatus(); $('estat').textContent=`${cut?'cut':'copied'} ${L.length} piece${L.length>1?'s':''}`+(ex?' + '+ex:'')+' — open any room and press Ctrl+V'; }
-async function artPasteStart(){ const c=(await clipLoad())||CLIP; if(!c||!c.pieces?.length){ $('estat').textContent='nothing copied yet: select pieces and press Ctrl+C'; return; } CLIP=c;
-  const ex=c.extra?Object.entries(c.extra).filter(([,v])=>v.length).map(([k,v])=>v.length+' '+k).join(', '):'';
+async function artPasteStart(){ const c=(await clipLoad())||CLIP; const hasExtra=!!(c?.extra&&Object.values(c.extra).some(v=>v?.length)); if(!c||(!c.pieces?.length&&!hasExtra)){ $('estat').textContent='nothing copied yet: select something and press Ctrl+C'; return; } CLIP=c;
+  const ex=c.extra?Object.entries(c.extra).filter(([,v])=>v?.length).map(([k,v])=>v.length+' '+(v.length>1?k:k.replace(/s$/,''))).join(', '):'';
   EDIT.aplace=null; EDIT.apaste={clip:c,at:null,extras:ex}; editStatus(); edRedraw(); }
 const bytesEq=(a,b)=>{ if(a.length!==b.length) return false; for(let i=0;i<a.length;i++) if(a[i]!==b[i]) return false; return true; };
 // a copied picture -> the name to use in this room: the same picture already here (any name), else add it (renamed if its name is taken)
@@ -2044,8 +2126,15 @@ async function artPasteAt(p){ const P=EDIT.apaste; EDIT.apaste=null; if(!P) retu
     for(const o of E.paths||[]){ let n=o.name; if(objArr('path').some(q=>q.name===n)) n=uniqName(String(n||'path').replace(/_?\d+$/,'')+'_',objArr('path')); objArr('path',true).push({...o,name:n,points:o.points.map(t=>({...t,x:t.x+dx,y:t.y+dy}))}); } }
   const artAfter=artSnap();
   if(withObj){ EDIT.undo.push({kind:'combo',art:{before:artBefore,after:artAfter},obj:{before:objBefore,after:objSnap()}}); EDIT.objDirty=true; } else EDIT.undo.push({kind:'art',before:artBefore,after:artAfter});
-  EDIT.redo=[]; EDIT.dirty=EDIT.artDirty=true; await artSync(); objUI();
-  $('estat').textContent=`pasted ${out.length} piece${out.length>1?'s':''}`+(P.extras?' + '+P.extras+' — rebuild the walk grid if you pasted lines':''); }
+  EDIT.redo=[]; EDIT.dirty=true; if(out.length) EDIT.artDirty=true; await artSync(); objUI();
+  if(EDIT.mode!=='art'&&withObj){ const E=c.extra, last=(k,n)=>n?objArr(k).slice(-n):[];
+    if(EDIT.mode==='vol'&&E.volumes.length) EDIT.vsel=last('volume',E.volumes.length).pop();
+    else if(EDIT.mode==='lines'&&E.lines.length) EDIT.lsel=last('line',E.lines.length);
+    else if(EDIT.mode==='path'&&(E.paths||[]).length) EDIT.psel=last('path',E.paths.length).pop();
+    else if(EDIT.mode==='obj'){ const o=last('spawn',E.spawns.length).pop()||last('portal',E.portals.length).pop()||last('action',E.actions.length).pop(); if(o) EDIT.sel=o; }
+    editStatus(); objUI(); edRedraw(); }
+  $('estat').textContent=(out.length?`pasted ${out.length} piece${out.length>1?'s':''}`+(P.extras?' + '+P.extras:''):`pasted ${P.extras}`)+(c.extra?.lines?.length?' — rebuild the walk grid for the pasted lines':''); }
+$('ea_layers').onclick=()=>{ LP.open=!LP.open; layersUI(); };
 $('ea_copy').onclick=()=>artCopy(false); $('ea_paste').onclick=()=>artPasteStart();
 clipLoad().then(c=>{ if(c&&!CLIP) CLIP=c; });
 $('ea_add').onchange=e=>{ const v=e.target.value; e.target.value=''; if(!v) return; if(v=='__file'){ $('ea_file').click(); return; } EDIT.aplace=v; editStatus(); };
@@ -2331,7 +2420,7 @@ $('dbg').addEventListener('dblclick',e=>{ if(!EDIT.on||EDIT.mode!=='vol'||!room)
   for(let i=0;i<P.length;i++){ const a=P[i], b=P[(i+1)%P.length], [dd,t]=segD(raw,{x:a.x,y:a.y,x1:b.x,y1:b.y});
     if(dd<7/SC&&t>0.02&&t<0.98){ const m={x:Math.round(a.x+(b.x-a.x)*t),y:Math.round(a.y+(b.y-a.y)*t)}; objChange(()=>{ const N=P.slice(); N.splice(i+1,0,m); volSet(v,N); }); return; } } });
 $('dbg').addEventListener('contextmenu',e=>{ if(EDIT.on&&EDIT.mode=='vol') e.preventDefault(); });
-addEventListener('keydown',e=>{ if(!EDIT.on||EDIT.mode!=='vol'||/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName)) return;
+addEventListener('keydown',e=>{ if(!EDIT.on||EDIT.mode!=='vol'||/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName)) return; if(msGroup().length>1) return;   // several selected: the multi-select keys handle it
   if(e.key=='Escape'){ EDIT.vchain=null; editStatus(); edRedraw(); e.preventDefault(); return; }
   if(e.key=='Enter'&&EDIT.vchain){ volFinish(); e.preventDefault(); return; }
   const v=EDIT.vsel; if(!v) return; const st=e.shiftKey?10:1, mv={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
@@ -2402,7 +2491,7 @@ $('dbg').addEventListener('dblclick',e=>{ if(!EDIT.on||EDIT.mode!=='path'||!room
   for(let i=0;i<n;i++){ const a=P[i], b=P[(i+1)%P.length], [dd,t]=segD(raw,{x:a.x,y:a.y,x1:b.x,y1:b.y});
     if(dd<7/SC&&t>0.02&&t<0.98){ const m={y:Math.round(a.y+(b.y-a.y)*t),x:Math.round(a.x+(b.x-a.x)*t)}; objChange(()=>{ const N=P.slice(); N.splice(i+1,0,m); q.points=N; }); return; } } });
 $('dbg').addEventListener('contextmenu',e=>{ if(EDIT.on&&EDIT.mode=='path') e.preventDefault(); });
-addEventListener('keydown',e=>{ if(!EDIT.on||EDIT.mode!=='path'||typing()) return;
+addEventListener('keydown',e=>{ if(!EDIT.on||EDIT.mode!=='path'||typing()) return; if(msGroup().length>1&&e.key!=='Escape'&&e.key!=='Enter') return;
   if(e.key=='Escape'){ EDIT.pchain=null; editStatus(); edRedraw(); e.preventDefault(); return; }
   if(e.key=='Enter'&&EDIT.pchain){ pathFinish(); e.preventDefault(); return; }
   const q=EDIT.psel; if(!q) return; const st=e.shiftKey?10:1, mv={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
@@ -2559,13 +2648,13 @@ addEventListener('keydown',e=>{ if(!EDIT.on||EDIT.mode!=='slide'||typing()) retu
 const HELP={
   grid:['Walk grid',[['Drag','paint with the chosen tool: brush, rectangle (drag a box) or bucket fill (click)'],['paint values','0 walkable · 1 blocks land animals · 2 blocks flyers · 3 blocks both (tested in game)'],['fill all','set every cell to the paint value'],['create grid','rooms without a grid: make one (all blocked), then paint the walkable areas'],['build grid from lines','rebuild it from the collision lines (inside closed outlines = walkable); flying blocks are kept']],
     'The game moves animals by this grid, not by the lines. A room players walk in needs one, or it loads forever.'],
-  obj:['Spawns, portals & actions',[['+ spawn / + portal / + action','then click in the room to place it'],['Click','select (or pick from the list)'],['Drag','move'],['<kbd>←↑→↓</kbd>','nudge 1 px · <kbd>Shift</kbd> 10 px'],['<kbd>Delete</kbd>','delete · duplicate copies it'],['fields','hover a field name for what it does']],
+  obj:['Spawns, portals & actions',[['<kbd>Shift</kbd>+drag, <kbd>Shift</kbd>+click','box-select several (works over other volumes too) · add or remove one; drag any selected one to move them all, Delete / arrows / Ctrl+C act on all'],['<kbd>Ctrl</kbd>+C, <kbd>Ctrl</kbd>+V','copy the selection; paste it here or in another room (click to place, <kbd>Esc</kbd> cancels)'],['+ spawn / + portal / + action','then click in the room to place it'],['Click','select (or pick from the list)'],['Drag','move'],['<kbd>←↑→↓</kbd>','nudge 1 px · <kbd>Shift</kbd> 10 px'],['<kbd>Delete</kbd>','delete · duplicate copies it'],['fields','hover a field name for what it does']],
     'Players entering without a portal arrive at the spawn named "default". Portal type 1 is a slide: make those in the slides mode.'],
-  lines:['Collision lines',[['draw','click to start, click to add corners; click the start again to close the outline'],['<kbd>Esc</kbd> · double-click · right-click','stop drawing'],['line ends','new points snap onto existing ends, so outlines close'],['select / move','click a line (<kbd>Shift</kbd> adds) · drag a box for many · drag a corner to move it · double-click a line to add a corner'],['<kbd>Delete</kbd>','delete the selected lines'],['erase','click a line, or drag across several']],
+  lines:['Collision lines',[['<kbd>Ctrl</kbd>+C, <kbd>Ctrl</kbd>+V','copy the selection; paste it here or in another room (click to place, <kbd>Esc</kbd> cancels)'],['draw','click to start, click to add corners; click the start again to close the outline'],['<kbd>Esc</kbd> · double-click · right-click','stop drawing'],['line ends','new points snap onto existing ends, so outlines close'],['select / move','click a line (<kbd>Shift</kbd> adds) · drag a box for many · drag a corner to move it · double-click a line to add a corner'],['<kbd>Delete</kbd>','delete the selected lines'],['erase','click a line, or drag across several']],
     'Orange rings are unconnected ends. After changing lines or air volumes (type 14), use "build grid from lines": lines make the land blocks, air volumes the flying blocks.'],
-  vol:['Volumes',[['draw','click the corners; click the first point, double-click or <kbd>Enter</kbd> to finish · <kbd>Esc</kbd> cancels'],['select / move','click a volume · drag inside it to move · drag a corner'],['Double-click an edge','add a corner'],['<kbd>Alt</kbd>-click a corner','remove it'],['<kbd>←↑→↓</kbd>','nudge · <kbd>Shift</kbd> 10 px'],['<kbd>Delete</kbd>','delete'],['make liquid…','water, mud, fire, acid, ice, ghost, fallleaves (exact names; anything else does nothing)']],
+  vol:['Volumes',[['<kbd>Shift</kbd>+drag, <kbd>Shift</kbd>+click','box-select several (works over other volumes too) · add or remove one; drag any selected one to move them all, Delete / arrows / Ctrl+C act on all'],['<kbd>Ctrl</kbd>+C, <kbd>Ctrl</kbd>+V','copy the selection; paste it here or in another room (click to place, <kbd>Esc</kbd> cancels)'],['draw','click the corners; click the first point, double-click or <kbd>Enter</kbd> to finish · <kbd>Esc</kbd> cancels'],['select / move','click a volume · drag inside it to move · drag a corner'],['Double-click an edge','add a corner'],['<kbd>Alt</kbd>-click a corner','remove it'],['<kbd>←↑→↓</kbd>','nudge · <kbd>Shift</kbd> 10 px'],['<kbd>Delete</kbd>','delete'],['make liquid…','water, mud, fire, acid, ice, ghost, fallleaves (exact names; anything else does nothing)']],
     'The type list says what each type does (from the game client and tests).'],
-  path:['NPC paths',[['draw','click points from where the NPC starts (green dot); double-click or <kbd>Enter</kbd> to finish · <kbd>Esc</kbd> cancels'],['one point','a spot for an NPC to walk to'],['select / move','click a path or its dot · drag it to move · drag a point'],['Double-click a line','add a point'],['<kbd>Alt</kbd>-click a point','remove it'],['<kbd>←↑→↓</kbd> · <kbd>Delete</kbd>','nudge · delete'],['closed loop · reverse · name','loop round, swap ends, the name quests use']],
+  path:['NPC paths',[['<kbd>Shift</kbd>+drag, <kbd>Shift</kbd>+click','box-select several (works over other volumes too) · add or remove one; drag any selected one to move them all, Delete / arrows / Ctrl+C act on all'],['<kbd>Ctrl</kbd>+C, <kbd>Ctrl</kbd>+V','copy the selection; paste it here or in another room (click to place, <kbd>Esc</kbd> cancels)'],['draw','click points from where the NPC starts (green dot); double-click or <kbd>Enter</kbd> to finish · <kbd>Esc</kbd> cancels'],['one point','a spot for an NPC to walk to'],['select / move','click a path or its dot · drag it to move · drag a point'],['Double-click a line','add a point'],['<kbd>Alt</kbd>-click a point','remove it'],['<kbd>←↑→↓</kbd> · <kbd>Delete</kbd>','nudge · delete'],['closed loop · reverse · name','loop round, swap ends, the name quests use']],
     'Paths do nothing on their own: a quest on the server tells an NPC to follow one by name.'],
   slide:['Slides',[['draw','click where the slide starts (top), then along its way; double-click or <kbd>Enter</kbd> at the end · <kbd>Esc</kbd> cancels'],['speed · smooth · ease in','set before drawing (20 feels normal, 12 slow; tested)'],['select / edit','click a slide · drag its line to move it with its portal and landing spawn · drag a white point to reshape it'],['apply speed / smooth / ease','rebuild the selected slide with those settings (makes the game\'s own slides editable too)'],['<kbd>Delete</kbd>','delete the slide: its piece, start portal and landing spawn']],
     'Slides are invisible in the game: add a slide picture as normal art. The start must be on a walkable cell.'],
@@ -2695,13 +2784,25 @@ function zoomTo(ns,cx,cy){ if(!room||!RC) return; const el=$('room').firstElemen
   for(const id of ['room','stage']){ $(id).style.width=Math.ceil(W*ns)+'px'; $(id).style.height=Math.ceil(H*ns)+'px'; }
   gvApply(); wolfPos(); drawDebug(W,H);
   const r1=$('room').getBoundingClientRect(); window.scrollBy(r1.left+px*ns-cx, r1.top+py*ns-cy);
-  zoomUI(); clearTimeout(zoomTo.t); zoomTo.t=setTimeout(zoomSharpen,500); }
+  zoomUI(); clearTimeout(zoomTo.t); zoomTo.t=setTimeout(()=>{ liveRescale(); zoomSharpen(); },500); }
 function zoomUI(){ const v=$('view'), o=$('vcustom'); const fit=room?fitScale(LAST.W,LAST.H):1;
   const named=[...v.options].find(x=>x.value!=='custom'&&x.value!=='fit'&&Math.abs(+x.value-SC)<1e-4);
   if(Math.abs(SC-fit)<1e-4&&v.value==='fit'){ o.hidden=true; ZOOMV=0; }
   else if(named){ v.value=named.value; o.hidden=true; ZOOMV=0; }
   else { o.hidden=false; o.textContent=Math.round(SC*100)+'%'; v.value='custom'; ZOOMV=SC; } }
 // images decoded small to save memory: decode again at the new size when zoomed in (never bigger than the picture itself)
+// Animated pieces are drawn at the size they are shown, not at their full size: at fit-to-window a big adventure is shown at a few %
+// of its size, and full-size players drew ~100× more pixels than anyone sees, which is what made big rooms crawl while loading. The
+// player element is made smaller and scaled back up with CSS; Ruffle just draws a smaller canvas (no restart). After a zoom the
+// players are resized to the new scale (a resize doesn't restart or pause them).
+// Far off-screen (more than half a screen away, and none of its copies near either) an animation keeps running but draws a tiny
+// picture; it gets its full detail back while still outside the screen, so nothing visibly changes.
+const LNEAR=new WeakSet(), liveIO=new IntersectionObserver(es=>{ for(const e of es){ if(e.isIntersecting) LNEAR.add(e.target); else LNEAR.delete(e.target); } if(!liveIO.t) liveIO.t=requestAnimationFrame(()=>{ liveIO.t=0; liveRescale(); }); },{rootMargin:'50%'});
+const liveNear=box=>LNEAR.has(box)||!!MIRROR.find(m=>m.box===box)?.dst.some(c=>LNEAR.has(c));
+const liveK=box=>!box||liveNear(box)?Math.max(0.02,Math.min(1,SC)):Math.max(0.02,Math.min(0.05,SC));
+function liveSize(p){ const box=p.parentElement||p._box; if(box&&!box._ioOn){ box._ioOn=true; liveIO.observe(box); } const k=liveK(box); if(p._k===k) return; p._k=k;
+  Object.assign(p.style,k>=1?{width:'100%',height:'100%',transform:'',transformOrigin:''}:{width:k*100+'%',height:k*100+'%',transformOrigin:'0 0',transform:`scale(${1/k})`}); }
+function liveRescale(){ for(const [l,e] of PIECE) if(e._live){ const p=e.querySelector('ruffle-player'); if(p) liveSize(p); } }
 async function zoomSharpen(){ if(!RC||$('imgq').value!=='fit') return; const dpr=window.devicePixelRatio||1, rid=RC.rid;
   for(const [l,e] of PIECE){ if(e.tagName!=='CANVAS'||!e._a||/\.gif$/i.test(e._a.name)||!e._t) continue; const t=e._t, n=RC.nat[e._a.name];
     const tw=Math.round(e._dw*Math.abs(t.sx)*SC*dpr), th=Math.round(e._dh*Math.abs(t.sy)*SC*dpr);
@@ -2784,10 +2885,126 @@ function liveChecks(){ const out=[]; if(!room) return out; const A=room.actors||
   return out; }
 function refreshLive(){ if(!room) return; const n=liveChecks(); PROBLEMS=PROBLEMS.filter(m=>!LIVE.has(m)); LIVE=new Set(n); PROBLEMS.push(...n); showProblems(); }
 
+// ---------- multi-select: volumes, spawns / portals / actions, paths ----------
+// Shift+click adds or removes; dragging on empty space draws a box (Shift: adds to the selection); dragging any selected one moves them
+// all; Delete removes them; arrow keys nudge them; Ctrl+C copies them. The one clicked last stays the main selection (its side panel and
+// its corners); the others are kept in EDIT.msel. The modes' own single-select code is untouched: these listeners only step in for the
+// cases above.
+const MS={box:null,drag:null};
+const msPrimary=()=>EDIT.mode==='vol'?EDIT.vsel:EDIT.mode==='path'?EDIT.psel:EDIT.mode==='obj'?EDIT.sel:null;
+function msSetPrimary(o){ if(EDIT.mode==='vol') EDIT.vsel=o; else if(EDIT.mode==='path') EDIT.psel=o; else if(EDIT.mode==='obj') EDIT.sel=o; }
+const msAll=()=>EDIT.mode==='vol'?objArr('volume'):EDIT.mode==='path'?objArr('path'):EDIT.mode==='obj'?['spawn','portal','action'].flatMap(k=>objArr(k)):[];
+function msGroup(){ if(!room||!['vol','obj','path'].includes(EDIT.mode)) return []; const live=new Set(msAll()); EDIT.msel=(EDIT.msel||[]).filter(o=>live.has(o)); const p=msPrimary(), g=EDIT.msel.filter(o=>o!==p); if(p&&live.has(p)) g.unshift(p); return g; }
+const msHit=p=>EDIT.mode==='vol'?volHit(p):EDIT.mode==='path'?pathHit(p):EDIT.mode==='obj'?objHit(p):null;
+const msPts=o=>EDIT.mode==='obj'?[o]:[...new Set(EDIT.mode==='vol'?(o.points||[]):pathPts(o))];
+const msCenter=o=>{ const P=msPts(o); return {x:P.reduce((t,q)=>t+q.x,0)/P.length,y:P.reduce((t,q)=>t+q.y,0)/P.length}; };
+const msActive=()=>EDIT.on&&!!room&&!EDIT.apaste&&((EDIT.mode==='vol'&&$('evtool').value!=='draw'&&!EDIT.vchain)||(EDIT.mode==='path'&&$('eptool').value!=='draw'&&!EDIT.pchain)||(EDIT.mode==='obj'&&!EDIT.place));
+function msRefresh(){ editStatus(); objUI(); edRedraw(); }
+$('dbg').addEventListener('pointerdown',e=>{ if(e.button!==0||!msActive()) return; const raw=roomXY(e), g=msGroup(), hit=msHit(raw), stop=()=>{ e.preventDefault(); e.stopImmediatePropagation(); };
+  const corner=EDIT.mode==='vol'?volVertexHit(raw,EDIT.vsel):EDIT.mode==='path'?pathVertexHit(raw,EDIT.psel):null;
+  if(corner&&!e.shiftKey){ EDIT.msel=[]; return; }                                         // reshaping the main one: the mode does it
+  if(e.shiftKey){ stop(); $('dbg').setPointerCapture(e.pointerId); MS.box={a:raw,b:raw,add:true,hit}; return; }   // Shift: a drag draws a box (even over volumes), a click adds or removes the one under the pointer
+  if(hit&&g.length>1&&g.includes(hit)){ stop(); $('dbg').setPointerCapture(e.pointerId); MS.drag={start:raw,orig:g.flatMap(o=>msPts(o).map(q=>({q,x:q.x,y:q.y}))),before:objSnap(),moved:false}; return; }
+  if(!hit){ stop(); EDIT.msel=[]; msSetPrimary(null); $('dbg').setPointerCapture(e.pointerId); MS.box={a:raw,b:raw,add:false}; msRefresh(); return; }
+  EDIT.msel=[]; },true);                                                                    // a plain click on one: the mode selects it as usual
+$('dbg').addEventListener('pointermove',e=>{ if(!MS.box&&!MS.drag) return; e.stopImmediatePropagation(); const raw=roomXY(e);
+  if(MS.box){ MS.box.b=raw; edRedraw(); return; }
+  const d=MS.drag, dx=snapV(Math.round(raw.x-d.start.x)), dy=snapV(Math.round(raw.y-d.start.y)); for(const r of d.orig){ r.q.x=r.x+dx; r.q.y=r.y+dy; } d.moved=true; $('dbg').style.cursor='grabbing'; edRedraw(); },true);
+$('dbg').addEventListener('pointerup',e=>{
+  if(MS.drag){ const d=MS.drag; MS.drag=null; e.stopImmediatePropagation(); if(d.moved){ EDIT.undo.push({kind:'obj',before:d.before,after:objSnap()}); EDIT.redo=[]; EDIT.dirty=EDIT.objDirty=true; } msRefresh(); return; }
+  if(MS.box){ const B=MS.box; MS.box=null; e.stopImmediatePropagation(); const x0=Math.min(B.a.x,B.b.x), x1=Math.max(B.a.x,B.b.x), y0=Math.min(B.a.y,B.b.y), y1=Math.max(B.a.y,B.b.y);
+    if((x1-x0)*SC>3||(y1-y0)*SC>3){ const inside=msAll().filter(o=>{ const c=msCenter(o); return c.x>=x0&&c.x<=x1&&c.y>=y0&&c.y<=y1; }), g=B.add?[...new Set([...msGroup(),...inside])]:inside; msSetPrimary(g[0]||null); EDIT.msel=g.slice(1); }
+    else if(B.add&&B.hit){ const g=msGroup(), hit=B.hit; if(g.includes(hit)){ const rest=g.filter(o=>o!==hit); msSetPrimary(rest[0]||null); EDIT.msel=rest.slice(1); } else { msSetPrimary(hit); EDIT.msel=g; } }
+    msRefresh(); } },true);
+addEventListener('keydown',e=>{ if(!EDIT.on||!['vol','obj','path'].includes(EDIT.mode)||typing()) return; const g=msGroup(), stop=()=>{ e.preventDefault(); e.stopImmediatePropagation(); };
+  if(g.length<2) return;
+  const st=e.shiftKey?10:1, mv={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
+  if(e.key==='Delete'||e.key==='Backspace'){ objChange(()=>{ const kinds=EDIT.mode==='obj'?['spawn','portal','action']:[EDIT.mode==='vol'?'volume':'path']; for(const o of g) for(const k of kinds){ const a=objArr(k), i=a.indexOf(o); if(i>=0) a.splice(i,1); } msSetPrimary(null); EDIT.msel=[]; }); $('estat').textContent=`deleted ${g.length}`; stop(); }
+  else if(mv){ const k=SNAP.on?SNAP.size:1, pts=g.flatMap(msPts); objChange(()=>{ for(const q of pts){ q.x+=mv[0]*k; q.y+=mv[1]*k; } }); stop(); }
+  else if(e.key==='Escape'){ EDIT.msel=[]; msRefresh(); stop(); } },true);
+function msPaint(g,k){ if(!EDIT.on||!['vol','obj','path'].includes(EDIT.mode)) return; const px=n=>n/k; g.save(); g.setLineDash([px(5),px(3)]); g.lineWidth=px(2); g.strokeStyle='#8cf';
+  const p=msPrimary(); for(const o of msGroup()){ if(o===p) continue;
+    if(EDIT.mode==='obj'){ g.beginPath(); g.arc(o.x,o.y,Math.max(+o.r||0,14/k),0,7); g.stroke(); }
+    else { const P=EDIT.mode==='vol'?volVerts(o):pathPts(o); g.beginPath(); P.forEach((q,i)=>i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y)); if(EDIT.mode==='vol') g.closePath(); g.stroke(); } }
+  const B=MS.box; if(B){ g.setLineDash([px(4),px(3)]); g.lineWidth=px(1.5); g.strokeStyle='#8cf'; g.fillStyle='rgba(120,190,255,.12)'; const x=Math.min(B.a.x,B.b.x), y=Math.min(B.a.y,B.b.y), w=Math.abs(B.b.x-B.a.x), h=Math.abs(B.b.y-B.a.y); g.fillRect(x,y,w,h); g.strokeRect(x,y,w,h); }
+  g.restore(); }
+// several selected: the side panel says so instead of showing one of them
+function msPanel(P,g){ const nm={vol:'volume',obj:'object',path:'path'}[EDIT.mode];
+  P.innerHTML=`<div class="oph"><b>${g.length} ${nm}s selected</b><button id="op_hide" title="hide the panel">hide ▸</button></div><div class="opb"><div class="orow"><div class="ohint" style="color:#ddd;margin-top:4px">${opEsc(g.slice(0,8).map(o=>o.name||'(no name)').join(', '))}${g.length>8?` and ${g.length-8} more`:''}</div><div class="ohint">Drag any of them to move them together · arrow keys nudge (Shift: 10 px) · Delete removes them · Ctrl+C copies them · Shift+click adds or removes one · Esc keeps only the main one.</div><div class="opre" style="margin-top:6px"><button class="chip" id="op_msdel">delete ${g.length}</button> <button class="chip" id="op_msone">keep only one</button></div></div></div>`;
+  $('op_hide').onclick=()=>{ OP.collapsed=true; try{ localStorage.setItem('xrv_opanel','1'); }catch(e){} editStatus(); };
+  $('op_msdel').onclick=()=>{ objChange(()=>{ const kinds=EDIT.mode==='obj'?['spawn','portal','action']:[EDIT.mode==='vol'?'volume':'path']; for(const o of g) for(const k of kinds){ const a=objArr(k), i=a.indexOf(o); if(i>=0) a.splice(i,1); } msSetPrimary(null); EDIT.msel=[]; }); };
+  $('op_msone').onclick=()=>{ EDIT.msel=[]; msRefresh(); }; }
+// ---------- copy objects between rooms (volumes, collision lines, spawns / portals / actions, paths) ----------
+// Ctrl+C in those edit modes puts the selection on the same clipboard as art pieces (kept in this browser, so it works across rooms);
+// Ctrl+V in any edit mode pastes: the copy follows the pointer and a click places it (Esc cancels).
+function objCopy(){ const cp=o=>JSON.parse(JSON.stringify(o)), E={lines:[],volumes:[],spawns:[],portals:[],actions:[],paths:[]}, boxes=[];
+  const bx=pts=>{ const xs=pts.map(q=>q.x), ys=pts.map(q=>q.y); boxes.push([Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]); };
+  const grp=msGroup();
+  if(EDIT.mode==='vol'&&grp.length){ for(const v of grp){ const V=volVerts(v); if(V.length>=3){ E.volumes.push({...cp({...v,points:null}),verts:V.map(q=>({...q}))}); bx(V); } } }
+  else if(EDIT.mode==='lines'&&EDIT.lsel.length){ for(const l of EDIT.lsel){ E.lines.push(cp(l)); bx([{x:l.x,y:l.y},{x:l.x1,y:l.y1}]); } }
+  else if(EDIT.mode==='path'&&grp.length){ for(const q of grp) if((q.points||[]).length){ E.paths.push(cp(q)); bx(q.points); } }
+  else if(EDIT.mode==='obj'&&grp.length){ for(const o of grp){ const k=objKind(o), r=Math.max(20,+o.r||0); ({spawn:E.spawns,portal:E.portals,action:E.actions})[k]?.push(cp(o)); bx([{x:o.x-r,y:o.y-r},{x:o.x+r,y:o.y+r}]); } }
+  if(!boxes.length){ $('estat').textContent='select something first'; return; }
+  const box=[Math.min(...boxes.map(b=>b[0])),Math.min(...boxes.map(b=>b[1])),Math.max(...boxes.map(b=>b[2])),Math.max(...boxes.map(b=>b[3]))];
+  const clip={from:CURNAME,pieces:[],pics:[],box,boxes,extra:E}; CLIP=clip; clipSave(clip);
+  const what=Object.entries(E).filter(([,v])=>v.length).map(([k,v])=>v.length+' '+(v.length>1?k:k.replace(/s$/,''))).join(', ');
+  $('estat').textContent=`copied ${what} — open any room, pick any edit mode and press Ctrl+V`; }
+addEventListener('keydown',e=>{ if(!EDIT.on||!['vol','lines','obj','path'].includes(EDIT.mode)||typing()) return;
+  const ctl=e.ctrlKey||e.metaKey, key=e.key.toLowerCase(), stop=()=>{ e.preventDefault(); e.stopImmediatePropagation(); };
+  if(e.key==='Escape'&&EDIT.apaste){ EDIT.apaste=null; editStatus(); edRedraw(); stop(); }
+  else if(ctl&&key==='c'){ objCopy(); stop(); }
+  else if(ctl&&key==='v'){ artPasteStart().then(()=>{ if(EDIT.apaste) $('estat').textContent=`click in the room to paste ${EDIT.apaste.extras||'the copy'} (Esc cancels)`; }); stop(); } },true);
+$('dbg').addEventListener('pointermove',e=>{ if(!EDIT.on||EDIT.mode==='art'||!EDIT.apaste) return; const p=roomXY(e), c=EDIT.apaste.clip;
+  EDIT.apaste.at={x:Math.round(p.x-(c.box[0]+c.box[2])/2),y:Math.round(p.y-(c.box[1]+c.box[3])/2)}; $('dbg').style.cursor='copy'; edRedraw(); e.stopImmediatePropagation(); },true);
+$('dbg').addEventListener('pointerdown',e=>{ if(!EDIT.on||EDIT.mode==='art'||!EDIT.apaste||e.button!==0) return; e.preventDefault(); e.stopImmediatePropagation(); artPasteAt(roomXY(e)); },true);
+// what is about to be pasted (outlines at the pointer), in the non-art edit modes
+function paintPastePreview(g,k){ const P=EDIT.apaste; if(!P||!P.at||EDIT.mode==='art') return; const px=n=>n/k, dx=P.at.x, dy=P.at.y, E=P.clip.extra||{};
+  g.save(); g.setLineDash([px(5),px(3)]); g.lineWidth=px(1.5); g.strokeStyle='#4ff';
+  for(const b of P.clip.boxes) g.strokeRect(b[0]+dx,b[1]+dy,b[2]-b[0],b[3]-b[1]);
+  g.setLineDash([]); g.lineWidth=px(2);
+  for(const l of E.lines||[]){ g.strokeStyle=LCOL[LKIND(l)]; g.beginPath(); g.moveTo(l.x+dx,l.y+dy); g.lineTo(l.x1+dx,l.y1+dy); g.stroke(); }
+  g.strokeStyle='#4ff'; for(const v of E.volumes||[]){ g.beginPath(); v.verts.forEach((q,i)=>i?g.lineTo(q.x+dx,q.y+dy):g.moveTo(q.x+dx,q.y+dy)); g.closePath(); g.stroke(); }
+  g.restore(); }
+
+// ---------- find by name ----------
+// Lists everything in the room whose name (or volume message, portal destination, art picture file) contains what you type; clicking a
+// result (or Enter, again for the next one) jumps there and flashes it, and while editing also selects it in the right edit mode.
+const FIND={list:[],i:-1};
+function findItems(q){ q=q.trim().toLowerCase(); if(!q||!room) return []; const out=[], has=v=>v!=null&&String(v).toLowerCase().includes(q);
+  const cen=o=>{ const P=o.points?volVerts(o):null; return P&&P.length?{x:P.reduce((t,p)=>t+p.x,0)/P.length,y:P.reduce((t,p)=>t+p.y,0)/P.length}:{x:+o.x||0,y:+o.y||0}; };
+  for(const v of objArr('volume')) if(has(v.name)||has(v.message)) out.push({o:v,k:'volume',name:v.name||'(no name)',d:`volume · ${VOL_TYPES[+v.type]?.t||'type '+v.type}${v.message?' · '+v.message:''}`,at:cen(v)});
+  for(const a of objArr('action')) if(has(a.name)) out.push({o:a,k:'action',name:a.name,d:`action · ${ACT_TYPES[+a.type]?.t||'type '+a.type}`,at:{x:+a.x,y:+a.y}});
+  for(const s of objArr('spawn')) if(has(s.name)) out.push({o:s,k:'spawn',name:s.name,d:'spawn',at:{x:+s.x,y:+s.y}});
+  for(const p of objArr('portal')) if(has(p.name)||has(p.goto)) out.push({o:p,k:'portal',name:p.name||p.goto,d:`portal · ${+p.type===1?'slide':'exit'}${p.goto?' → '+p.goto:''}`,at:{x:+p.x,y:+p.y}});
+  for(const p of objArr('path')) if(has(p.name)){ const q0=(p.points||[])[0]; out.push({o:p,k:'path',name:p.name,d:`path · ${(p.points||[]).length} points`,at:q0?{x:+q0.x,y:+q0.y}:{x:0,y:0}}); }
+  for(const l of artArr()){ const f=(l.assetName||'').split('\\').pop(); if(has(l.name)||has(f)) out.push({o:l,k:'art',name:l.name||f,d:`art piece${l.name?' · '+f:''} · layer ${l.layer}`,at:{x:(+l.left||+l.x||0)+(+l.width||0)/2,y:(+l.top||+l.y||0)+(+l.height||0)/2}}); }
+  return out; }
+function findShow(){ const R=$('findres'), q=$('find').value; FIND.list=findItems(q); FIND.i=-1;
+  if(!q.trim()){ R.hidden=true; return; }
+  R.innerHTML=FIND.list.length?FIND.list.slice(0,200).map((r,i)=>`<div data-i="${i}">${opEsc(r.name)}<small>${opEsc(r.d)}</small></div>`).join('')+(FIND.list.length>200?`<div class="none">… ${FIND.list.length-200} more: type more to narrow it down</div>`:''):`<div class="none">${room?'nothing in this room matches':'open a room first'}</div>`;
+  R.hidden=false; }
+function findGo(i){ const r=FIND.list[i]; if(!r) return; FIND.i=i; for(const d of $('findres').querySelectorAll('div[data-i]')) d.classList.toggle('on',+d.dataset.i===i);
+  goTo(r.at);
+  if(EDIT.on){ const mode={volume:'vol',action:'obj',spawn:'obj',portal:'obj',path:'path',art:'art'}[r.k];
+    if(EDIT.mode!==mode){ $('emode').value=mode; $('emode').onchange({target:$('emode')}); }
+    if(r.k==='volume') EDIT.vsel=r.o; else if(r.k==='path') EDIT.psel=r.o; else if(r.k==='art') selSet([r.o],r.o); else EDIT.sel=r.o;
+    editStatus(); objUI(); edRedraw(); }
+  $('info').title=''; }
+$('find').addEventListener('input',findShow);
+$('find').addEventListener('focus',()=>{ if($('find').value.trim()) findShow(); });
+$('find').addEventListener('keydown',e=>{ const n=FIND.list.length;
+  if(e.key==='Enter'){ e.preventDefault(); if(n) findGo((FIND.i+1)%n); }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); if(n) findGo((FIND.i+1)%n); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); if(n) findGo((FIND.i-1+n)%n); }
+  else if(e.key==='Escape'){ $('find').value=''; $('findres').hidden=true; $('find').blur(); }
+  e.stopPropagation(); });
+$('findres').addEventListener('mousedown',e=>{ const d=e.target.closest('div[data-i]'); if(!d) return; e.preventDefault(); findGo(+d.dataset.i); });
+document.addEventListener('mousedown',e=>{ if(!e.target.closest('#findwrap')) $('findres').hidden=true; });
+
 // ---------- export ----------
 function swfFrame(box){
   if(box._snap) return box._snap;
-  const c=box.firstElementChild?.shadowRoot?.querySelector('canvas');     // animated players: works only if Ruffle uses its canvas renderer
+  const fe=box.firstElementChild, c=fe?.tagName==='CANVAS'?fe:fe?.shadowRoot?.querySelector('canvas');     // animated players: works only if Ruffle uses its canvas renderer (copies of a shared animation are canvases)
   if(!c||!c.width) return null;
   try{ const t=document.createElement('canvas'); t.width=c.width; t.height=c.height; t.getContext('2d').drawImage(c,0,0); return blank(t)?null:t; }catch(e){ return null; }
 }
@@ -2801,7 +3018,7 @@ async function exportPng(){
   $('prog').textContent='exporting…';
   for(const e of [...el.children].sort((a,b)=>(+a.style.zIndex||0)-(+b.style.zIndex||0))){
     if(e===WOLF.el){ if(WOLF.img.complete){ g.save(); g.translate(WOLF.x-WOLF.ax*(WOLF.flip?-1:1),WOLF.y-WOLF.ay); if(WOLF.flip) g.scale(-1,1); g.drawImage(WOLF.img,0,0); g.restore(); } continue; }
-    const l=e._l; if(!l) continue; if(e.classList.contains('guide')&&!$('dbgbox').checked) continue;
+    const l=e._l; if(!l) continue; if(e.classList.contains('guide')&&!$('dbgbox').checked) continue; if(e._hid) continue;   // hidden while editing: export what you see
     const x=parseFloat(e.style.left)/SC, y=parseFloat(e.style.top)/SC, w=e._dw??parseFloat(e.style.width), h=e._dh??parseFloat(e.style.height);
     let src=null, close=null; const t=e._t;
     if(e._a){ const vw=w*Math.abs(t.sx)*s, vh=h*Math.abs(t.sy)*s;
@@ -2841,7 +3058,7 @@ let dbgScrollRaf=0; const dbgFollow=()=>{ if(dbgScrollRaf||!room||$('dbg').style
   const need=[Math.max(0,-st.left),Math.max(0,-st.top),Math.min(fw,innerWidth-st.left),Math.min(fh,innerHeight-st.top)];
   if(need[0]<V.x0||need[1]<V.y0||need[2]>V.x1||need[3]>V.y1) drawDebug(LAST.W,LAST.H); }); };
 addEventListener('scroll',dbgFollow,true); addEventListener('resize',()=>{ if(room&&$('dbg').style.display!=='none') edRedraw(); });
-function drawDebug(W,H){
+function drawDebug(W,H){ artVisApply();
   // the overlay canvas only covers the part of the room on screen (plus a margin) and is redrawn on scroll: a canvas the size of a
   // big room at 100% (times the screen's pixel density) is tens of millions of pixels, more than the browser will draw (it went white)
   const c=$('dbg'), dpr=window.devicePixelRatio||1, fw=W*SC, fh=H*SC, st=$('stage').getBoundingClientRect(), mx=innerWidth*0.25, my=innerHeight*0.25;
@@ -2914,5 +3131,18 @@ addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('o
 sessionRestore();
 
 // the top bar is fixed to the window (it stays put when the room scrolls sideways or down); the page starts below it
-{ const pad=()=>{ document.body.style.paddingTop=$('bar').offsetHeight+'px'; }; pad(); try{ new ResizeObserver(()=>{ pad(); if(typeof opPlace==='function'&&!($('opanel').hidden&&$('otab').hidden)) opPlace(); }).observe($('bar')); }catch(e){ addEventListener('resize',pad); } }
+// ---------- settings panel ----------
+// Settings you set once live behind the ⚙ button so the bar stays short. The controls are moved, not copied: same ids, handlers,
+// hover explanations and remembered values.
+{ const wrap=document.createElement('span'); wrap.id='setwrap'; wrap.style.position='relative';
+  wrap.innerHTML='<button id="setbtn" title="settings you usually set once: game strings, image quality, still-frame timing, SWF sharing, outlines and position, loading, export size, autosave">⚙ settings</button><div id="setpanel" hidden><div class="sethead">Settings</div></div>';
+  const P=wrap.querySelector('#setpanel'), hold=id=>{ const el=$(id); return el&&(el.closest('label')||el); };
+  const items=[$('strbtn')?.closest('span'),hold('imgq'),hold('stilldelay'),hold('swfshare'),hold('sndbox'),hold('swfbox'),hold('swfmode'),hold('conc'),hold('expscale'),hold('asbox')];
+  $('exp').before(wrap);
+  for(const it of items) if(it){ const row=document.createElement('div'); row.appendChild(it); P.appendChild(row); }
+  const open=on=>{ P.hidden=!on; $('setbtn').classList.toggle('on',on); if(on){ P.style.left='0'; P.style.right='auto'; const r=P.getBoundingClientRect(); if(r.right>innerWidth-8){ P.style.left='auto'; P.style.right='0'; } } };
+  $('setbtn').onclick=()=>open(P.hidden);
+  document.addEventListener('mousedown',e=>{ if(!P.hidden&&!e.target.closest('#setwrap')) open(false); });
+  addEventListener('keydown',e=>{ if(e.key==='Escape'&&!P.hidden){ open(false); } }); }
+{ const pad=()=>{ document.body.style.paddingTop=$('bar').offsetHeight+'px'; const pb=$('problems'); if(pb) pb.style.top=($('bar').getBoundingClientRect().bottom+6)+'px'; }; pad(); try{ new ResizeObserver(()=>{ pad(); if(typeof opPlace==='function'&&!($('opanel').hidden&&$('otab').hidden)) opPlace(); }).observe($('bar')); }catch(e){ addEventListener('resize',pad); } }
 </script>
